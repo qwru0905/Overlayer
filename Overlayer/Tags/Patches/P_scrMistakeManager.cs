@@ -4,7 +4,7 @@ using System;
 namespace Overlayer.Tags.Patches;
 
 public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
-    [LazyPatch("Tags.P_scrMistakeManager.AccuracyStats__CalculatePercentAcc", "scrMistakesManager", "CalculatePercentAcc", Triggers =
+    [LazyPatch("Tags.P_scrMistakeManager.AccuracyStats__CalculatePercentAcc", "scrMistakesManager", "CalculateTotalAccuracy", Triggers =
     [
         nameof(AccuracyStats.Accuracy), nameof(AccuracyStats.MaxAccuracy),
         nameof(AccuracyStats.XAccuracy), nameof(AccuracyStats.MaxXAccuracy),
@@ -12,25 +12,26 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
     ])]
     public static class AccuracyStats__CalculatePercentAcc {
         public static void Postfix(scrMistakesManager __instance) {
-            int perfect = __instance.GetHits(HitMargin.Perfect);
-            int auto = __instance.GetHits(HitMargin.Auto);
-            int earlyPerfect = __instance.GetHits(HitMargin.EarlyPerfect);
-            int latePerfect = __instance.GetHits(HitMargin.LatePerfect);
-            int veryEarly = __instance.GetHits(HitMargin.VeryEarly);
-            int veryLate = __instance.GetHits(HitMargin.VeryLate);
-            int tooEarly = __instance.GetHits(HitMargin.TooEarly);
-            int tooLate = __instance.GetHits(HitMargin.TooLate);
-            int failMiss = __instance.GetHits(HitMargin.FailMiss);
-            int failOverload = __instance.GetHits(HitMargin.FailOverload);
+            var tracker = ADOBase.controller.playerOne.marginTracker;
+            int perfect = tracker.GetHits(HitMargin.Perfect);
+            int auto = tracker.GetHits(HitMargin.Auto);
+            int earlyPerfect = tracker.GetHits(HitMargin.EarlyPerfect);
+            int latePerfect = tracker.GetHits(HitMargin.LatePerfect);
+            int veryEarly = tracker.GetHits(HitMargin.VeryEarly);
+            int veryLate = tracker.GetHits(HitMargin.VeryLate);
+            int tooEarly = tracker.GetHits(HitMargin.TooEarly);
+            int tooLate = tracker.GetHits(HitMargin.TooLate);
+            int failMiss = tracker.GetHits(HitMargin.FailMiss);
+            int failOverload = tracker.GetHits(HitMargin.FailOverload);
 
             int success = perfect + earlyPerfect + latePerfect + auto;
-            int total = scrMistakesManager.hitMargins.Count + failMiss + failOverload;
+            int total = tracker.hitMargins.Count + failMiss + failOverload;
             double ratio = (success == total) ? 1.0 : ((double)success / total);
             double bonus = (perfect + auto) * 0.0001;
 
             AccuracyStats.Accuracy = 100.0 * (ratio + bonus);
 
-            double totalHits = scrMistakesManager.hitMargins.Count;
+            double totalHits = tracker.hitMargins.Count;
             double weightedHits =
                 perfect + auto +
                 (0.75 * (earlyPerfect + latePerfect)) +
@@ -48,7 +49,7 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
                 int lefttile = Tile.LeftTile - (ADOBase.lm.listFloors[Tile.CurTile].midSpin ? 1 : 0);
 
                 int mxsucess = lefttile + perfect + auto + earlyPerfect + latePerfect;
-                int mxtotal = scrMistakesManager.hitMargins.Count + lefttile + failMiss + failOverload;
+                int mxtotal = tracker.hitMargins.Count + lefttile + failMiss + failOverload;
                 double mxratio = (mxsucess == mxtotal) ? 1.0 : ((double)mxsucess / mxtotal);
                 double mxbonus = (lefttile + perfect + auto) * 0.0001;
 

@@ -744,12 +744,12 @@ public static class Impl {
         [Api("setJudgeText")]
         public static void SetJudgeText(HitMargin hitMargin, string text) {
             StaticCoroutine.Run(StaticCoroutine.SyncRunner(() => {
-                if(cachedHitTexts(Tags.ADOFAI.Controller) == null) {
+                if(cachedHitTexts(ADOBase.playerManager.hitTextManager) == null) {
                     return;
                 }
 
-                foreach(var t in cachedHitTexts(Tags.ADOFAI.Controller)[hitMargin]) {
-                    sHTM_text(t).text = text;
+                foreach(var t in cachedHitTexts(ADOBase.playerManager.hitTextManager)[hitMargin]) {
+                    t.text.text = text;
                 }
             }));
         }
@@ -764,11 +764,11 @@ public static class Impl {
 
             FIWrapper wrapper = new(func);
             StaticCoroutine.Run(StaticCoroutine.SyncRunner(() => {
-                if(cachedHitTexts(Tags.ADOFAI.Controller) == null) {
+                if(cachedHitTexts(ADOBase.playerManager.hitTextManager) == null) {
                     return;
                 }
 
-                foreach(var t in cachedHitTexts(Tags.ADOFAI.Controller)[hitMargin]) {
+                foreach(var t in cachedHitTexts(ADOBase.playerManager.hitTextManager)[hitMargin]) {
                     wrapper.Call(func);
                 }
             }));
@@ -793,8 +793,7 @@ public static class Impl {
         public static void SetWeakAuto(bool enabled) => RDC.useOldAuto = enabled;
         [Api("getAngleFromFloor")]
         public static double GetAngleFromFloor(scrFloor floor) => Math.Abs(floor.entryangle - floor.exitangle) * Mathf.Rad2Deg;
-        internal static AccessTools.FieldRef<scrController, Dictionary<HitMargin, scrHitTextMesh[]>> cachedHitTexts = AccessTools.FieldRefAccess<scrController, Dictionary<HitMargin, scrHitTextMesh[]>>("cachedHitTexts");
-        internal static AccessTools.FieldRef<scrHitTextMesh, TextMesh> sHTM_text = AccessTools.FieldRefAccess<scrHitTextMesh, TextMesh>("text");
+        internal static AccessTools.FieldRef<scrHitTextManager, Dictionary<HitMargin, scrHitTextMesh[]>> cachedHitTexts = AccessTools.FieldRefAccess<scrHitTextManager, Dictionary<HitMargin, scrHitTextMesh[]>>("cachedHitTexts");
         private static float startRadius = 1;
         internal static bool autoTextInjected = false;
         internal static bool startRadiusInjected = false;

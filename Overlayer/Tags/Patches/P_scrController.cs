@@ -22,12 +22,12 @@ public class P_scrController : PatchBase<P_scrController> {
         public static void Postfix() => ProgressStats.BestProgress_Update();
     }
 
-    [LazyPatch("Tags.P_scrController.Hit__OnDamage", "scrController", "OnDamage", Triggers =
+    [LazyPatch("Tags.P_scrController.Hit__OnDamage", "scrPlayer", "OnDamage", Triggers =
     [
         nameof(Hit.Multipress)
     ])]
     public static class Hit__OnDamage {
-        public static void Postfix(scrController __instance, bool multipress, bool applyMultipressDamage) {
+        public static void Postfix(scrPlayer __instance, bool multipress, bool applyMultipressDamage) {
             if(multipress) {
                 if(applyMultipressDamage || __instance.consecMultipressCounter > 5) {
                     Hit.Multipress++;

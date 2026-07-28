@@ -43,6 +43,21 @@ public class ProfileConfig : IModel, ICopyable<ProfileConfig> {
     public void Deserialize(JToken node) {
         var defaults = new ProfileConfig();
 
+        // Pre-profile-support Overlayer versions stored a single implicit profile as a bare
+        // top-level array of TextConfig objects (e.g. an old Texts.json), with no Active/Opacity
+        // wrapper and no per-item "Type" - every entry was a text object.
+        if(node is JArray legacyObjects) {
+            Active = defaults.Active;
+            Opacity = defaults.Opacity;
+            Objects = [];
+            foreach(var obj in legacyObjects) {
+                var cfg = new TextConfig();
+                cfg.Deserialize(obj);
+                Objects.Add(cfg);
+            }
+            return;
+        }
+
         Active = node[nameof(Active)]?.Value<bool>() ?? defaults.Active;
         Opacity = node[nameof(Opacity)]?.Value<float>() ?? defaults.Opacity;
         Objects = [];

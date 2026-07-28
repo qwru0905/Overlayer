@@ -183,33 +183,35 @@ public static class Hit {
     [Tag]
     [TagDesc("Current Too Early + Current Too Late")]
     public static int CT => CTE + CTL;
+    static int[] hitMarginsCount => scrController.instance?.playerOne?.marginTracker?.hitMarginsCount;
+
     [Tag]
     [TagDesc("Official Too Early")]
-    public static int OTE => scrMistakesManager.hitMarginsCount[0];
+    public static int OTE => hitMarginsCount?[0] ?? 0;
     [Tag]
     [TagDesc("Official Very Early")]
-    public static int OVE => scrMistakesManager.hitMarginsCount[1];
+    public static int OVE => hitMarginsCount?[1] ?? 0;
     [Tag]
     [TagDesc("Official Early Perfect")]
-    public static int OEP => scrMistakesManager.hitMarginsCount[2];
+    public static int OEP => hitMarginsCount?[2] ?? 0;
     [Tag]
     [TagDesc("Official Perfect")]
     public static int OP => OPP + OA;
     [Tag]
     [TagDesc("Official Late Perfect")]
-    public static int OLP => scrMistakesManager.hitMarginsCount[4];
+    public static int OLP => hitMarginsCount?[4] ?? 0;
     [Tag]
     [TagDesc("Normal Very Late")]
-    public static int OVL => scrMistakesManager.hitMarginsCount[5];
+    public static int OVL => hitMarginsCount?[5] ?? 0;
     [Tag]
     [TagDesc("Official Too Late")]
-    public static int OTL => scrMistakesManager.hitMarginsCount[6];
+    public static int OTL => hitMarginsCount?[6] ?? 0;
     [Tag]
     [TagDesc("Official Perfect (Only Auto)")]
-    public static int OA => scrMistakesManager.hitMarginsCount[10];
+    public static int OA => hitMarginsCount?[10] ?? 0;
     [Tag]
     [TagDesc("Official Perfect (Only Player)")]
-    public static int OPP => scrMistakesManager.hitMarginsCount[3];
+    public static int OPP => hitMarginsCount?[3] ?? 0;
     [Tag]
     [TagDesc("Fast judgment in Official")]
     public static int OFast => OTE + OVE + OEP;
@@ -228,10 +230,10 @@ public static class Hit {
 
     [Tag]
     [TagDesc("Number of Misses")]
-    public static int MissCount => scrController.instance?.mistakesManager?.GetHits(HitMargin.FailMiss) ?? 0;
+    public static int MissCount => scrController.instance?.playerOne?.marginTracker?.GetHits(HitMargin.FailMiss) ?? 0;
     [Tag]
     [TagDesc("Number of Overloads")]
-    public static int Overloads => scrController.instance?.mistakesManager?.GetHits(HitMargin.FailOverload) ?? 0;
+    public static int Overloads => scrController.instance?.playerOne?.marginTracker?.GetHits(HitMargin.FailOverload) ?? 0;
     [Tag]
     [TagDesc("MissCount + Overloads")]
     public static int Fail => MissCount + Overloads;
@@ -253,7 +255,7 @@ public static class Hit {
             if(ctrl.noFailInfiniteMargin) {
                 hitMargin = HitMargin.FailMiss;
             }
-            if(ctrl.midspinInfiniteMargin || (RDC.auto && !RDC.useOldAuto)) {
+            if(ctrl.playerOne.midspinInfiniteMargin || (RDC.auto && !RDC.useOldAuto)) {
                 hitMargin = HitMargin.Perfect;
             }
         }

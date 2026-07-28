@@ -1,4 +1,4 @@
-﻿using Overlayer.Tags.Attributes;
+using Overlayer.Tags.Attributes;
 
 namespace Overlayer.Tags;
 
@@ -55,7 +55,7 @@ public static class Bpm {
         }
         float cur = bpm;
         if(__instance.currentSeqID != 0) {
-            double speed = scrController.instance.speed;
+            double speed = scrController.instance.planetarySystem.speed;
             cur = (float)(bpm * speed);
         }
         TileBpm = cur;
@@ -66,7 +66,7 @@ public static class Bpm {
     public static double GetRealBpm(scrFloor floor, float bpm) {
         return floor == null
             ? (double)bpm
-            : floor.nextfloor == null ? scrController.instance.speed * bpm : 60.0 / (floor.nextfloor.entryTime - floor.entryTime);
+            : floor.nextfloor == null ? scrController.instance.planetarySystem.speed * bpm : 60.0 / (floor.nextfloor.entryTime - floor.entryTime);
     }
 
     public static void Update(scrFloor floor) {
@@ -76,12 +76,12 @@ public static class Bpm {
 
         double curBPM = GetRealBpm(floor, bpm) * pitch;
 
-        TileBpm = bpm * scrController.instance.speed;
+        TileBpm = bpm * scrController.instance.planetarySystem.speed;
         CurBpm = curBPM;
         RecKPS = curBPM / 60;
 
         double curBPMWithoutPitch = GetRealBpm(floor, bpmwithoutpitch);
-        TileBpmWithoutPitch = bpmwithoutpitch * scrController.instance.speed;
+        TileBpmWithoutPitch = bpmwithoutpitch * scrController.instance.planetarySystem.speed;
         CurBpmWithoutPitch = curBPMWithoutPitch;
         RecKPSWithoutPitch = curBPMWithoutPitch / 60;
     }

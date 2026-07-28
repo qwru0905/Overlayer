@@ -21,7 +21,9 @@ public class M_MonsterLove : PatchBase<M_MonsterLove> {
             if(cur != newState && (States)newState == States.PlayerControl) {
                 Tile.IsStarted = true;
 
-                if(ADOBase.isScnGame || !ADOBase.isPlayingLevel) {
+                // ADOBase.isPlayingLevel was removed by the game update; approximate it with
+                // "gameplay is currently unpaused" (its closest surviving equivalent).
+                if(ADOBase.isScnGame || (ADOBase.controller?.paused ?? true)) {
                     return;
                 }
                 Tile.SetStartValues(ctrl, ctrl.currentSeqID);

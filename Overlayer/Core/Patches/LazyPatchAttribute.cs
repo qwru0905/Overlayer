@@ -7,7 +7,7 @@ namespace Overlayer.Core.Patches;
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 internal class LazyPatchAttribute : Attribute {
-    public static readonly int CurrentVersion = (int)typeof(GCNS).GetField("releaseNumber").GetValue(null);
+    public static readonly int CurrentVersion = (int)typeof(Releases).GetField("releaseNumber").GetValue(null);
     public string Id { get; }
     public string TargetType { get; }
     public string TargetMethod { get; }

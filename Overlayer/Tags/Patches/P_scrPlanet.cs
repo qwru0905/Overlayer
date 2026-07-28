@@ -51,9 +51,9 @@ public class P_scrPlanet : PatchBase<P_scrPlanet> {
             if(Main.IsPlaying) {
                 HitTiming.Timing =
                     (__instance.angle - __instance.targetExitAngle)
-                    * (scrController.instance.isCW ? 1.0 : -1.0)
+                    * (scrController.instance.planetarySystem.isCW ? 1.0 : -1.0)
                     * 60000.0
-                    / (Math.PI * __instance.conductor.bpm * scrController.instance.speed * __instance.conductor.song.pitch);
+                    / (Math.PI * __instance.conductor.bpm * scrController.instance.planetarySystem.speed * __instance.conductor.song.pitch);
                 HitTiming.Timings.Add(HitTiming.Timing);
                 HitTiming.TimingAvg = HitTiming.Timings.Average();
             } else {
