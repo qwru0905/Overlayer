@@ -14,8 +14,6 @@
     <Deterministic>true</Deterministic>
     <LangVersion>13.0</LangVersion>
     <TargetFrameworkProfile />
-    <!-- Override by setting the ADOFAIPath environment variable if the game isn't at the default Steam location. -->
-    <ADOFAIPath Condition="'$(ADOFAIPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice</ADOFAIPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -40,31 +38,31 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityModManager\0Harmony.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityModManager\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Acornima, Version=1.6.2.0, Culture=neutral, PublicKeyToken=496b38436bb9edeb, processorArchitecture=MSIL">
       <HintPath>..\packages\Acornima.1.6.2\lib\net462\Acornima.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>$(ManagedPath)\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>$(ManagedPath)\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="BlackSharp.Core, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\BlackSharp.Core.1.0.7\lib\net481\BlackSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="DemiLib">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\DemiLib.dll</HintPath>
+      <HintPath>$(ManagedPath)\DemiLib.dll</HintPath>
     </Reference>
     <Reference Include="DiskInfoToolkit, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\DiskInfoToolkit.1.1.2\lib\net481\DiskInfoToolkit.dll</HintPath>
     </Reference>
     <Reference Include="DOTween">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\DOTween.dll</HintPath>
+      <HintPath>$(ManagedPath)\DOTween.dll</HintPath>
     </Reference>
     <Reference Include="DOTweenPro">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\DOTweenPro.dll</HintPath>
+      <HintPath>$(ManagedPath)\DOTweenPro.dll</HintPath>
     </Reference>
     <Reference Include="Esprima, Version=3.0.5.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
       <HintPath>..\packages\Esprima.3.0.5\lib\net462\Esprima.dll</HintPath>
@@ -84,13 +82,13 @@
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(ManagedPath)\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="RAMSPDToolkit-NDD, Version=1.4.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\RAMSPDToolkit-NDD.1.4.2\lib\net481\RAMSPDToolkit-NDD.dll</HintPath>
     </Reference>
     <Reference Include="RDTools">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\RDTools.dll</HintPath>
+      <HintPath>$(ManagedPath)\RDTools.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -139,64 +137,64 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="Unity.Addressables">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Addressables.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Addressables.dll</HintPath>
     </Reference>
     <Reference Include="Unity.AI.Navigation">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.AI.Navigation.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.AI.Navigation.dll</HintPath>
     </Reference>
     <Reference Include="Unity.MemoryProfiler">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.MemoryProfiler.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.MemoryProfiler.dll</HintPath>
     </Reference>
     <Reference Include="Unity.ResourceManager">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.ResourceManager.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.ResourceManager.dll</HintPath>
     </Reference>
     <Reference Include="Unity.ScriptableBuildPipeline">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.ScriptableBuildPipeline.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.ScriptableBuildPipeline.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Analytics">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Analytics.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Analytics.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Configuration">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Configuration.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Configuration.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Device">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Device.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Device.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Environments">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Environments.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Environments.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Environments.Internal">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Environments.Internal.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Environments.Internal.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Internal">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Internal.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Internal.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Networking">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Networking.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Networking.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Registration">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Registration.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Registration.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Scheduler">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Scheduler.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Scheduler.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Telemetry">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Telemetry.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Telemetry.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Services.Core.Threading">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Services.Core.Threading.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Services.Core.Threading.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Timeline">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\Unity.Timeline.dll</HintPath>
+      <HintPath>$(ManagedPath)\Unity.Timeline.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.dll</HintPath>
     </Reference>
     <!-- Compile-time-only shim: identical to the game's netstandard.dll (v2.1.0.0, satisfies
          UnityEngine.ImageConversionModule's minimum netstandard version) but with its Span/Memory
@@ -207,241 +205,241 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.AccessibilityModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.AccessibilityModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.AccessibilityModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.AIModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.AIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AndroidJNIModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.AndroidJNIModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.AndroidJNIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AnimationModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.AnimationModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ARModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.ARModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.ARModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AudioModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.AudioModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ClothModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.ClothModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.ClothModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ClusterInputModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.ClusterInputModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.ClusterInputModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ClusterRendererModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.ClusterRendererModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.ClusterRendererModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ContentLoadModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.ContentLoadModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.ContentLoadModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CrashReportingModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.CrashReportingModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.CrashReportingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.DirectorModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.DirectorModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.DirectorModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.DSPGraphModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.DSPGraphModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.DSPGraphModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.GameCenterModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.GameCenterModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.GameCenterModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.GIModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.GIModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.GIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.GridModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.GridModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.GridModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.HotReloadModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.HotReloadModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.HotReloadModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.InputModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.InputModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.LocalizationModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.LocalizationModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.LocalizationModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.NVIDIAModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.NVIDIAModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.NVIDIAModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ParticleSystemModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.ParticleSystemModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PerformanceReportingModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.PerformanceReportingModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.PerformanceReportingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Physics2DModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Physics2DModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ProfilerModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.ProfilerModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.ProfilerModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PropertiesModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.PropertiesModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.PropertiesModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Purchasing">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Purchasing.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Purchasing.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Purchasing.AppleCore">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Purchasing.AppleCore.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Purchasing.AppleCore.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Purchasing.AppleMacosStub">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Purchasing.AppleMacosStub.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Purchasing.AppleMacosStub.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Purchasing.AppleStub">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Purchasing.AppleStub.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Purchasing.AppleStub.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Purchasing.Codeless">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Purchasing.Codeless.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Purchasing.Codeless.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Purchasing.SecurityCore">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Purchasing.SecurityCore.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Purchasing.SecurityCore.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Purchasing.SecurityStub">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Purchasing.SecurityStub.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Purchasing.SecurityStub.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Purchasing.Stores">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Purchasing.Stores.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Purchasing.Stores.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Purchasing.WinRTCore">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Purchasing.WinRTCore.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Purchasing.WinRTCore.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Purchasing.WinRTStub">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.Purchasing.WinRTStub.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.Purchasing.WinRTStub.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ScreenCaptureModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.ScreenCaptureModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.ScreenCaptureModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SharedInternalsModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.SharedInternalsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SpriteMaskModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.SpriteMaskModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.SpriteMaskModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SpriteShapeModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.SpriteShapeModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.SpriteShapeModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.StreamingModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.StreamingModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.StreamingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SubstanceModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.SubstanceModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.SubstanceModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SubsystemsModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.SubsystemsModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.SubsystemsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TerrainModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.TerrainModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.TerrainModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TerrainPhysicsModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.TerrainPhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextCoreFontEngineModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextCoreTextEngineModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TilemapModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.TilemapModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.TilemapModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TLSModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.TLSModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.TLSModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UmbraModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UmbraModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UmbraModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityAnalyticsCommonModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityAnalyticsModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UnityAnalyticsModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UnityAnalyticsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityConnectModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UnityConnectModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UnityConnectModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityCurlModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UnityCurlModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UnityCurlModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityTestProtocolModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UnityTestProtocolModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UnityTestProtocolModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestAudioModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UnityWebRequestModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestTextureModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestWWWModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VehiclesModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.VehiclesModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.VehiclesModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VFXModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.VFXModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.VFXModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VideoModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.VideoModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.VideoModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VirtualTexturingModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.VirtualTexturingModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.VirtualTexturingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VRModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.VRModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.VRModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.WindModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.WindModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.WindModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.XRModule">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityEngine.XRModule.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityEngine.XRModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityModManager">
-      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityModManager\UnityModManager.dll</HintPath>
+      <HintPath>$(ManagedPath)\UnityModManager\UnityModManager.dll</HintPath>
     </Reference>
     <Reference Include="Vostok.Sys.Metrics.PerfCounters, Version=0.0.8.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Vostok.Sys.Metrics.PerfCounters.0.0.8\lib\netstandard2.0\Vostok.Sys.Metrics.PerfCounters.dll</HintPath>

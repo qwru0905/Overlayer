@@ -1,0 +1,15 @@
+<Project>
+  <!--
+    Per-machine overrides (game install path, non-Windows reference assemblies, ...) go in
+    Directory.Build.local.props next to this file. That file is gitignored, so every dev/OS
+    can point it at their own paths without passing -p: switches on every build.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.local.props" Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.local.props')" />
+
+  <PropertyGroup>
+    <ADOFAIPath Condition=" '$(ADOFAIPath)' == '' ">C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice</ADOFAIPath>
+    <ManagedPath Condition=" '$(ManagedPath)' == '' ">$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed</ManagedPath>
+    <!-- dotnet SDK doesn't ship net4.8.1 reference assemblies; Mono's net4.8 API set compiles fine against it. -->
+    <FrameworkPathOverride Condition=" '$(FrameworkPathOverride)' == '' AND '$(OS)' != 'Windows_NT' ">/usr/lib/mono/4.8-api</FrameworkPathOverride>
+  </PropertyGroup>
+</Project>

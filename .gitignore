@@ -330,6 +330,9 @@ node_modules/
 *.dsw
 *.dsp
 
+# Per-machine build overrides (game install path, non-Windows toolchain paths, ...)
+Directory.Build.local.props
+
 # Visual Studio 6 technical files
 *.ncb
 *.aps
