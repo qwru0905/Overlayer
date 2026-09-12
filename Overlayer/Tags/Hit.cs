@@ -187,31 +187,40 @@ public static class Hit {
 
     [Tag]
     [TagDesc("Official Too Early")]
-    public static int OTE => hitMarginsCount?[0] ?? 0;
+    public static int OTE => hitMarginsCount?[(int)HitMargin.TooEarly] ?? 0;
     [Tag]
     [TagDesc("Official Very Early")]
-    public static int OVE => hitMarginsCount?[1] ?? 0;
+    public static int OVE => hitMarginsCount?[(int)HitMargin.VeryEarly] ?? 0;
     [Tag]
     [TagDesc("Official Early Perfect")]
-    public static int OEP => hitMarginsCount?[2] ?? 0;
+    public static int OEP => hitMarginsCount?[(int)HitMargin.EarlyPerfect] ?? 0;
     [Tag]
     [TagDesc("Official Perfect")]
     public static int OP => OPP + OA;
     [Tag]
     [TagDesc("Official Late Perfect")]
-    public static int OLP => hitMarginsCount?[4] ?? 0;
+    public static int OLP => hitMarginsCount?[(int)HitMargin.LatePerfect] ?? 0;
     [Tag]
     [TagDesc("Normal Very Late")]
-    public static int OVL => hitMarginsCount?[5] ?? 0;
+    public static int OVL => hitMarginsCount?[(int)HitMargin.VeryLate] ?? 0;
     [Tag]
     [TagDesc("Official Too Late")]
-    public static int OTL => hitMarginsCount?[6] ?? 0;
+    public static int OTL => hitMarginsCount?[(int)HitMargin.TooLate] ?? 0;
     [Tag]
     [TagDesc("Official Perfect (Only Auto)")]
-    public static int OA => hitMarginsCount?[10] ?? 0;
+    public static int OA => hitMarginsCount?[(int)HitMargin.Auto] ?? 0;
     [Tag]
-    [TagDesc("Official Perfect (Only Player)")]
-    public static int OPP => hitMarginsCount?[3] ?? 0;
+    [TagDesc("Official Perfect Minus (early side of the perfect window)")]
+    public static int OPM => hitMarginsCount?[(int)HitMargin.PerfectMinus] ?? 0;
+    [Tag]
+    [TagDesc("Official X Perfect (center of the perfect window)")]
+    public static int OXP => hitMarginsCount?[(int)HitMargin.XPerfect] ?? 0;
+    [Tag]
+    [TagDesc("Official Perfect Plus (late side of the perfect window)")]
+    public static int OPL => hitMarginsCount?[(int)HitMargin.PerfectPlus] ?? 0;
+    [Tag]
+    [TagDesc("Official Perfect (Only Player, Minus + X + Plus)")]
+    public static int OPP => OPM + OXP + OPL;
     [Tag]
     [TagDesc("Fast judgment in Official")]
     public static int OFast => OTE + OVE + OEP;
@@ -256,7 +265,7 @@ public static class Hit {
                 hitMargin = HitMargin.FailMiss;
             }
             if(ctrl.playerOne.midspinInfiniteMargin || (RDC.auto && !RDC.useOldAuto)) {
-                hitMargin = HitMargin.Perfect;
+                hitMargin = HitMargin.XPerfect;
             }
         }
     }
@@ -302,7 +311,7 @@ public static class Hit {
                         break;
                 }
                 break;
-            case HitMargin.Perfect:
+            case HitMargin.XPerfect:
                 switch(diff) {
                     case global::Difficulty.Lenient:
                         LP++;
@@ -368,7 +377,7 @@ public static class Hit {
             case HitMargin.EarlyPerfect:
                 CEP++;
                 break;
-            case HitMargin.Perfect:
+            case HitMargin.XPerfect:
                 CP++;
                 break;
             case HitMargin.LatePerfect:
@@ -431,12 +440,12 @@ public static class Hit {
             : angleDeg < -pureDeg
             ? HitMargin.EarlyPerfect
             : angleDeg <= pureDeg
-            ? HitMargin.Perfect
+            ? HitMargin.XPerfect
             : angleDeg <= perfectDeg ? HitMargin.LatePerfect : angleDeg <= countedDeg ? HitMargin.VeryLate : HitMargin.TooLate;
     }
 
     public static void Reset() {
-        Lenient = Normal = Strict = Current = HitMargin.Perfect;
+        Lenient = Normal = Strict = Current = HitMargin.XPerfect;
         LTE = LVE = LEP = LP = LLP = LVL = LTL = 0;
         NTE = NVE = NEP = NP = NLP = NVL = NTL = 0;
         STE = SVE = SEP = SP = SLP = SVL = STL = 0;
@@ -459,7 +468,7 @@ public static class Hit {
                 HitMargin.TooEarly => LTE,
                 HitMargin.VeryEarly => LVE,
                 HitMargin.EarlyPerfect => LEP,
-                HitMargin.Perfect => LP,
+                HitMargin.XPerfect => LP,
                 HitMargin.LatePerfect => LLP,
                 HitMargin.VeryLate => LVL,
                 HitMargin.TooLate => LTL,
@@ -469,7 +478,7 @@ public static class Hit {
                 HitMargin.TooEarly => NTE,
                 HitMargin.VeryEarly => NVE,
                 HitMargin.EarlyPerfect => NEP,
-                HitMargin.Perfect => NP,
+                HitMargin.XPerfect => NP,
                 HitMargin.LatePerfect => NLP,
                 HitMargin.VeryLate => NVL,
                 HitMargin.TooLate => NTL,
@@ -479,7 +488,7 @@ public static class Hit {
                 HitMargin.TooEarly => STE,
                 HitMargin.VeryEarly => SVE,
                 HitMargin.EarlyPerfect => SEP,
-                HitMargin.Perfect => SP,
+                HitMargin.XPerfect => SP,
                 HitMargin.LatePerfect => SLP,
                 HitMargin.VeryLate => SVL,
                 HitMargin.TooLate => STL,

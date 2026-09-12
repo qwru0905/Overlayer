@@ -26,7 +26,7 @@ public static class Scores {
             case HitMargin.LatePerfect:
                 Score += 150;
                 break;
-            case HitMargin.Perfect:
+            case HitMargin.XPerfect:
                 Score += 300;
                 break;
         }
@@ -39,7 +39,7 @@ public static class Scores {
             case HitMargin.LatePerfect:
                 LScore += 150;
                 break;
-            case HitMargin.Perfect:
+            case HitMargin.XPerfect:
                 LScore += 300;
                 break;
         }
@@ -52,7 +52,7 @@ public static class Scores {
             case HitMargin.LatePerfect:
                 NScore += 150;
                 break;
-            case HitMargin.Perfect:
+            case HitMargin.XPerfect:
                 NScore += 300;
                 break;
         }
@@ -65,7 +65,7 @@ public static class Scores {
             case HitMargin.LatePerfect:
                 SScore += 150;
                 break;
-            case HitMargin.Perfect:
+            case HitMargin.XPerfect:
                 SScore += 300;
                 break;
         }

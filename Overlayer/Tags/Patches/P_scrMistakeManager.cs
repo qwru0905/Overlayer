@@ -13,7 +13,7 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
     public static class AccuracyStats__CalculatePercentAcc {
         public static void Postfix(scrMistakesManager __instance) {
             var tracker = ADOBase.controller.playerOne.marginTracker;
-            int perfect = tracker.GetHits(HitMargin.Perfect);
+            int perfect = tracker.GetHits(HitMargin.PerfectMinus, HitMargin.XPerfect, HitMargin.PerfectPlus);
             int auto = tracker.GetHits(HitMargin.Auto);
             int earlyPerfect = tracker.GetHits(HitMargin.EarlyPerfect);
             int latePerfect = tracker.GetHits(HitMargin.LatePerfect);

@@ -57,7 +57,7 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
                 return;
             }
             if(!Hit.ControllerIsSafe(controller)) {
-                if(__result == HitMargin.Perfect) {
+                if(__result == HitMargin.XPerfect) {
                     ComboStats.MaxCombo = Math.Max(ComboStats.MaxCombo, ++ComboStats.Combo);
                 } else {
                     ComboStats.Combo = 0;
