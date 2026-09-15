@@ -6,10 +6,10 @@ namespace Overlayer.Tags.Patches;
 public class P_scrMisc : PatchBase<P_scrMisc> {
     [LazyPatch("Tags.P_scrMisc.Hit__GetHitMargin", "scrMisc", "GetHitMargin", Triggers =
     [
-        nameof(Hit.LHit), nameof(Hit.LTE), nameof(Hit.LVE), nameof(Hit.LEP), nameof(Hit.LP), nameof(Hit.LLP), nameof(Hit.LVL), nameof(Hit.LTL),
-        nameof(Hit.NHit), nameof(Hit.NTE), nameof(Hit.NVE), nameof(Hit.NEP), nameof(Hit.NP), nameof(Hit.NLP), nameof(Hit.NVL), nameof(Hit.NTL),
-        nameof(Hit.SHit), nameof(Hit.STE), nameof(Hit.SVE), nameof(Hit.SEP), nameof(Hit.SP), nameof(Hit.SLP), nameof(Hit.SVL), nameof(Hit.STL),
-        nameof(Hit.CHit), nameof(Hit.CTE), nameof(Hit.CVE), nameof(Hit.CEP), nameof(Hit.CP), nameof(Hit.CLP), nameof(Hit.CVL), nameof(Hit.CTL),
+        nameof(Hit.LHit), nameof(Hit.LTE), nameof(Hit.LVE), nameof(Hit.LEP), nameof(Hit.LPM), nameof(Hit.LXP), nameof(Hit.LPP), nameof(Hit.LP), nameof(Hit.LLP), nameof(Hit.LVL), nameof(Hit.LTL),
+        nameof(Hit.NHit), nameof(Hit.NTE), nameof(Hit.NVE), nameof(Hit.NEP), nameof(Hit.NPM), nameof(Hit.NXP), nameof(Hit.NPP), nameof(Hit.NP), nameof(Hit.NLP), nameof(Hit.NVL), nameof(Hit.NTL),
+        nameof(Hit.SHit), nameof(Hit.STE), nameof(Hit.SVE), nameof(Hit.SEP), nameof(Hit.SPM), nameof(Hit.SXP), nameof(Hit.SPP), nameof(Hit.SP), nameof(Hit.SLP), nameof(Hit.SVL), nameof(Hit.STL),
+        nameof(Hit.CHit), nameof(Hit.CTE), nameof(Hit.CVE), nameof(Hit.CEP), nameof(Hit.CPM), nameof(Hit.CXP), nameof(Hit.CPP), nameof(Hit.CP), nameof(Hit.CLP), nameof(Hit.CVL), nameof(Hit.CTL),
         nameof(Hit.LT),   nameof(Hit.LV),  nameof(Hit.LELP),
         nameof(Hit.NT),   nameof(Hit.NV),  nameof(Hit.NELP),
         nameof(Hit.ST),   nameof(Hit.SV),  nameof(Hit.SELP),
@@ -57,7 +57,9 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
                 return;
             }
             if(!Hit.ControllerIsSafe(controller)) {
-                if(__result == HitMargin.XPerfect) {
+                // PerfectMinus/XPerfect/PerfectPlus all sit inside the old single "Perfect!" window
+                // (game r150+ split it three ways), so any of them should keep the combo alive.
+                if(__result is HitMargin.PerfectMinus or HitMargin.XPerfect or HitMargin.PerfectPlus) {
                     ComboStats.MaxCombo = Math.Max(ComboStats.MaxCombo, ++ComboStats.Combo);
                 } else {
                     ComboStats.Combo = 0;

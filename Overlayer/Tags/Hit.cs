@@ -42,8 +42,17 @@ public static class Hit {
     [TagDesc("Lenient Early Perfect")]
     public static int LEP;
     [Tag]
-    [TagDesc("Lenient Perfect")]
-    public static int LP;
+    [TagDesc("Lenient Perfect Minus (early side of the perfect window)")]
+    public static int LPM;
+    [Tag]
+    [TagDesc("Lenient X Perfect (center of the perfect window)")]
+    public static int LXP;
+    [Tag]
+    [TagDesc("Lenient Perfect Plus (late side of the perfect window)")]
+    public static int LPP;
+    [Tag]
+    [TagDesc("Lenient Perfect (Minus + X + Plus)")]
+    public static int LP => LPM + LXP + LPP;
     [Tag]
     [TagDesc("Lenient Late Perfect")]
     public static int LLP;
@@ -65,8 +74,17 @@ public static class Hit {
     [TagDesc("Normal Early Perfect")]
     public static int NEP;
     [Tag]
-    [TagDesc("Normal Perfect")]
-    public static int NP;
+    [TagDesc("Normal Perfect Minus (early side of the perfect window)")]
+    public static int NPM;
+    [Tag]
+    [TagDesc("Normal X Perfect (center of the perfect window)")]
+    public static int NXP;
+    [Tag]
+    [TagDesc("Normal Perfect Plus (late side of the perfect window)")]
+    public static int NPP;
+    [Tag]
+    [TagDesc("Normal Perfect (Minus + X + Plus)")]
+    public static int NP => NPM + NXP + NPP;
     [Tag]
     [TagDesc("Normal Late Perfect")]
     public static int NLP;
@@ -88,8 +106,17 @@ public static class Hit {
     [TagDesc("Strict Early Perfect")]
     public static int SEP;
     [Tag]
-    [TagDesc("Strict Perfect")]
-    public static int SP;
+    [TagDesc("Strict Perfect Minus (early side of the perfect window)")]
+    public static int SPM;
+    [Tag]
+    [TagDesc("Strict X Perfect (center of the perfect window)")]
+    public static int SXP;
+    [Tag]
+    [TagDesc("Strict Perfect Plus (late side of the perfect window)")]
+    public static int SPP;
+    [Tag]
+    [TagDesc("Strict Perfect (Minus + X + Plus)")]
+    public static int SP => SPM + SXP + SPP;
     [Tag]
     [TagDesc("Strict Late Perfect")]
     public static int SLP;
@@ -111,8 +138,17 @@ public static class Hit {
     [TagDesc("Current Early Perfect")]
     public static int CEP;
     [Tag]
-    [TagDesc("Current Perfect")]
-    public static int CP;
+    [TagDesc("Current Perfect Minus (early side of the perfect window)")]
+    public static int CPM;
+    [Tag]
+    [TagDesc("Current X Perfect (center of the perfect window)")]
+    public static int CXP;
+    [Tag]
+    [TagDesc("Current Perfect Plus (late side of the perfect window)")]
+    public static int CPP;
+    [Tag]
+    [TagDesc("Current Perfect (Minus + X + Plus)")]
+    public static int CP => CPM + CXP + CPP;
     [Tag]
     [TagDesc("Current Late Perfect")]
     public static int CLP;
@@ -311,16 +347,42 @@ public static class Hit {
                         break;
                 }
                 break;
+            case HitMargin.PerfectMinus:
+                switch(diff) {
+                    case global::Difficulty.Lenient:
+                        LPM++;
+                        break;
+                    case global::Difficulty.Normal:
+                        NPM++;
+                        break;
+                    case global::Difficulty.Strict:
+                        SPM++;
+                        break;
+                }
+                break;
             case HitMargin.XPerfect:
                 switch(diff) {
                     case global::Difficulty.Lenient:
-                        LP++;
+                        LXP++;
                         break;
                     case global::Difficulty.Normal:
-                        NP++;
+                        NXP++;
                         break;
                     case global::Difficulty.Strict:
-                        SP++;
+                        SXP++;
+                        break;
+                }
+                break;
+            case HitMargin.PerfectPlus:
+                switch(diff) {
+                    case global::Difficulty.Lenient:
+                        LPP++;
+                        break;
+                    case global::Difficulty.Normal:
+                        NPP++;
+                        break;
+                    case global::Difficulty.Strict:
+                        SPP++;
                         break;
                 }
                 break;
@@ -377,8 +439,14 @@ public static class Hit {
             case HitMargin.EarlyPerfect:
                 CEP++;
                 break;
+            case HitMargin.PerfectMinus:
+                CPM++;
+                break;
             case HitMargin.XPerfect:
-                CP++;
+                CXP++;
+                break;
+            case HitMargin.PerfectPlus:
+                CPP++;
                 break;
             case HitMargin.LatePerfect:
                 CLP++;
@@ -415,13 +483,17 @@ public static class Hit {
         double val = scrMisc.TimeToAngleInRad((double)num, bpmTimesSpeed, conductorPitch, false) * 57.295780181884766;
         double val2 = scrMisc.TimeToAngleInRad((double)num2, bpmTimesSpeed, conductorPitch, false) * 57.295780181884766;
         double val3 = scrMisc.TimeToAngleInRad(num3, bpmTimesSpeed, conductorPitch, false) * 57.295780181884766;
+        // XPerfect's hard window is a fixed ~16.6667ms (one 60fps frame), the same at every difficulty.
+        double val4 = scrMisc.TimeToAngleInRad(0.01666666753590107, bpmTimesSpeed, conductorPitch, false) * 57.295780181884766;
         double result = Math.Max(GCS.HITMARGIN_COUNTED * marginMult, val);
         double result2 = Math.Max(45.0 * marginMult, val2);
         double result3 = Math.Max(30.0 * marginMult, val3);
+        double result4 = Math.Max(12.5 * marginMult, val4);
         return marginType switch {
             HitMarginGeneral.Counted => result,
             HitMarginGeneral.Perfect => result2,
             HitMarginGeneral.Pure => result3,
+            HitMarginGeneral.XPerfect => result4,
             _ => result,
         };
     }
@@ -432,6 +504,7 @@ public static class Hit {
         double countedDeg = GetAdjustedAngleBoundaryInDeg(diff, HitMarginGeneral.Counted, bpmTimesSpeed, conductorPitch, marginScale);
         double perfectDeg = GetAdjustedAngleBoundaryInDeg(diff, HitMarginGeneral.Perfect, bpmTimesSpeed, conductorPitch, marginScale);
         double pureDeg = GetAdjustedAngleBoundaryInDeg(diff, HitMarginGeneral.Pure, bpmTimesSpeed, conductorPitch, marginScale);
+        double xperfectDeg = GetAdjustedAngleBoundaryInDeg(diff, HitMarginGeneral.XPerfect, bpmTimesSpeed, conductorPitch, marginScale);
 
         return angleDeg < -countedDeg
             ? HitMargin.TooEarly
@@ -439,17 +512,21 @@ public static class Hit {
             ? HitMargin.VeryEarly
             : angleDeg < -pureDeg
             ? HitMargin.EarlyPerfect
-            : angleDeg <= pureDeg
+            : angleDeg < -xperfectDeg
+            ? HitMargin.PerfectMinus
+            : angleDeg <= xperfectDeg
             ? HitMargin.XPerfect
+            : angleDeg <= pureDeg
+            ? HitMargin.PerfectPlus
             : angleDeg <= perfectDeg ? HitMargin.LatePerfect : angleDeg <= countedDeg ? HitMargin.VeryLate : HitMargin.TooLate;
     }
 
     public static void Reset() {
         Lenient = Normal = Strict = Current = HitMargin.XPerfect;
-        LTE = LVE = LEP = LP = LLP = LVL = LTL = 0;
-        NTE = NVE = NEP = NP = NLP = NVL = NTL = 0;
-        STE = SVE = SEP = SP = SLP = SVL = STL = 0;
-        CTE = CVE = CEP = CP = CLP = CVL = CTL = 0;
+        LTE = LVE = LEP = LPM = LXP = LPP = LLP = LVL = LTL = 0;
+        NTE = NVE = NEP = NPM = NXP = NPP = NLP = NVL = NTL = 0;
+        STE = SVE = SEP = SPM = SXP = SPP = SLP = SVL = STL = 0;
+        CTE = CVE = CEP = CPM = CXP = CPP = CLP = CVL = CTL = 0;
         Multipress = 0;
     }
 
@@ -468,7 +545,9 @@ public static class Hit {
                 HitMargin.TooEarly => LTE,
                 HitMargin.VeryEarly => LVE,
                 HitMargin.EarlyPerfect => LEP,
-                HitMargin.XPerfect => LP,
+                HitMargin.PerfectMinus => LPM,
+                HitMargin.XPerfect => LXP,
+                HitMargin.PerfectPlus => LPP,
                 HitMargin.LatePerfect => LLP,
                 HitMargin.VeryLate => LVL,
                 HitMargin.TooLate => LTL,
@@ -478,7 +557,9 @@ public static class Hit {
                 HitMargin.TooEarly => NTE,
                 HitMargin.VeryEarly => NVE,
                 HitMargin.EarlyPerfect => NEP,
-                HitMargin.XPerfect => NP,
+                HitMargin.PerfectMinus => NPM,
+                HitMargin.XPerfect => NXP,
+                HitMargin.PerfectPlus => NPP,
                 HitMargin.LatePerfect => NLP,
                 HitMargin.VeryLate => NVL,
                 HitMargin.TooLate => NTL,
@@ -488,7 +569,9 @@ public static class Hit {
                 HitMargin.TooEarly => STE,
                 HitMargin.VeryEarly => SVE,
                 HitMargin.EarlyPerfect => SEP,
-                HitMargin.XPerfect => SP,
+                HitMargin.PerfectMinus => SPM,
+                HitMargin.XPerfect => SXP,
+                HitMargin.PerfectPlus => SPP,
                 HitMargin.LatePerfect => SLP,
                 HitMargin.VeryLate => SVL,
                 HitMargin.TooLate => STL,

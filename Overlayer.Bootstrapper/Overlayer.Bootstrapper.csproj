@@ -13,6 +13,8 @@
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <LangVersion>13.0</LangVersion>
+    <!-- Override by setting the ADOFAIPath environment variable if the game isn't at the default Steam location. -->
+    <ADOFAIPath Condition="'$(ADOFAIPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice</ADOFAIPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,7 +43,7 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityModManager">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice\A Dance of Fire and Ice_Data\Managed\UnityModManager\UnityModManager.dll</HintPath>
+      <HintPath>$(ADOFAIPath)\A Dance of Fire and Ice_Data\Managed\UnityModManager\UnityModManager.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -50,6 +52,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice\Mods\Overlayer\Overlayer.Bootstrapper.dll"</PostBuildEvent>
+    <PostBuildEvent>copy "$(TargetPath)" "$(ADOFAIPath)\Mods\Overlayer\Overlayer.Bootstrapper.dll"</PostBuildEvent>
   </PropertyGroup>
 </Project>

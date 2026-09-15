@@ -8,62 +8,51 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
     [
         nameof(AccuracyStats.Accuracy), nameof(AccuracyStats.MaxAccuracy),
         nameof(AccuracyStats.XAccuracy), nameof(AccuracyStats.MaxXAccuracy),
-        nameof(AccuracyStats.AbsXAccuracy), nameof(AccuracyStats.AbsMaxXAccuracy)
+        nameof(AccuracyStats.AbsXAccuracy), nameof(AccuracyStats.AbsMaxXAccuracy),
+        nameof(Scores.XScore), nameof(Scores.MaxXScore)
     ])]
     public static class AccuracyStats__CalculatePercentAcc {
         public static void Postfix(scrMistakesManager __instance) {
+            // scrMarginTracker.CalculatePercentAcc() (called on every hit, before this
+            // postfix runs) already computes percentAcc/percentXAcc/maxPossibleXAcc/xScore
+            // using the game's own up-to-date weights, so read those directly instead of
+            // re-deriving them here. This is what keeps midspin/autoplay excluded from
+            // X-Accuracy (game r150+): HitMarginHelper.PlayerHitMarginWeights simply has no
+            // entry for HitMargin.Auto/Midspin/Multipress/OverPress, so GetHitsWithWeights
+            // and playerHitMarginCount never count them.
             var tracker = ADOBase.controller.playerOne.marginTracker;
-            int perfect = tracker.GetHits(HitMargin.PerfectMinus, HitMargin.XPerfect, HitMargin.PerfectPlus);
-            int auto = tracker.GetHits(HitMargin.Auto);
-            int earlyPerfect = tracker.GetHits(HitMargin.EarlyPerfect);
-            int latePerfect = tracker.GetHits(HitMargin.LatePerfect);
-            int veryEarly = tracker.GetHits(HitMargin.VeryEarly);
-            int veryLate = tracker.GetHits(HitMargin.VeryLate);
-            int tooEarly = tracker.GetHits(HitMargin.TooEarly);
-            int tooLate = tracker.GetHits(HitMargin.TooLate);
-            int failMiss = tracker.GetHits(HitMargin.FailMiss);
-            int failOverload = tracker.GetHits(HitMargin.FailOverload);
 
-            int success = perfect + earlyPerfect + latePerfect + auto;
-            int total = tracker.hitMargins.Count + failMiss + failOverload;
-            double ratio = (success == total) ? 1.0 : ((double)success / total);
-            double bonus = (perfect + auto) * 0.0001;
+            double checkpointMinus = Math.Pow(0.9875, scrController.checkpointsUsed);
 
-            AccuracyStats.Accuracy = 100.0 * (ratio + bonus);
+            AccuracyStats.Accuracy = 100.0 * tracker.percentAcc;
+            AccuracyStats.XAccuracy = 100.0 * tracker.percentXAcc;
+            AccuracyStats.AbsXAccuracy = AccuracyStats.XAccuracy / checkpointMinus;
+            AccuracyStats.AbsMaxXAccuracy = 100.0 * tracker.maxPossibleXAcc;
+            AccuracyStats.MaxXAccuracy = AccuracyStats.AbsMaxXAccuracy * checkpointMinus;
 
-            double totalHits = tracker.hitMargins.Count;
-            double weightedHits =
-                perfect + auto +
-                (0.75 * (earlyPerfect + latePerfect)) +
-                (0.4 * (veryEarly + veryLate)) +
-                (0.2 * (tooEarly + tooLate));
-
-            double checkpointminus = Math.Pow(0.9875, scrController.checkpointsUsed);
-            AccuracyStats.AbsXAccuracy = 100.0 * (weightedHits / totalHits);
-            AccuracyStats.XAccuracy = AccuracyStats.AbsXAccuracy * checkpointminus;
+            Scores.XScore = tracker.xScore;
+            Scores.MaxXScore = tracker.maxXScore;
 
             if(ADOBase.lm is not null && ADOBase.lm.listFloors != null &&
                 Tile.CurTile >= 0 && Tile.CurTile < ADOBase.lm.listFloors.Count &&
                 ADOBase.lm.listFloors[Tile.CurTile] != null) {
 
+                // Mirrors scrMarginTracker.CalculatePercentAcc()'s HitMarginHelper.PerfectHitMargins /
+                // SemiPerfectHitMargins split, extended with the tiles left in the level as guaranteed
+                // future perfects, to estimate the best Accuracy still reachable from here.
+                int perfectAll = tracker.GetHits(HitMargin.PerfectMinus, HitMargin.XPerfect, HitMargin.PerfectPlus, HitMargin.Auto, HitMargin.Midspin, HitMargin.Multipress);
+                int semiPerfect = tracker.GetHits(HitMargin.EarlyPerfect, HitMargin.LatePerfect);
+                int failedFloor = tracker.GetHits(HitMargin.FailedFloor);
+                int deaths = tracker.GetDeaths();
+
                 int lefttile = Tile.LeftTile - (ADOBase.lm.listFloors[Tile.CurTile].midSpin ? 1 : 0);
 
-                int mxsucess = lefttile + perfect + auto + earlyPerfect + latePerfect;
-                int mxtotal = tracker.hitMargins.Count + lefttile + failMiss + failOverload;
+                int mxsucess = lefttile + perfectAll + semiPerfect;
+                int mxtotal = tracker.hitMargins.Count + lefttile + deaths;
                 double mxratio = (mxsucess == mxtotal) ? 1.0 : ((double)mxsucess / mxtotal);
-                double mxbonus = (lefttile + perfect + auto) * 0.0001;
+                double mxbonus = ((lefttile + perfectAll) * 0.0001) - (failedFloor * 0.0001);
 
                 AccuracyStats.MaxAccuracy = 100.0 * (mxratio + mxbonus);
-
-                double possibleHitsX =
-                    lefttile + perfect + auto +
-                    (0.75 * (earlyPerfect + latePerfect)) +
-                    (0.4 * (veryEarly + veryLate)) +
-                    (0.2 * (tooEarly + tooLate));
-
-                double denomX = lefttile + totalHits;
-                AccuracyStats.AbsMaxXAccuracy = 100.0 * (possibleHitsX / denomX);
-                AccuracyStats.MaxXAccuracy = AccuracyStats.AbsMaxXAccuracy * checkpointminus;
             }
         }
     }

@@ -46,8 +46,10 @@ public static class ComboStats {
     [TagDesc("Displays a special mark based on your play performance:\nPP = perfect  FC+ = no miss\nFC = full combo  XX = no special mark")]
     public static string SpecialPlayMark(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) {
         var seqID = scrController.instance.currentSeqID;
-        var ppCombo = MarginCombos_Internal(GCS.difficulty, "Perfect");
-        var noMiss = MarginCombos_Internal(GCS.difficulty, "VeryEarly|EarlyPerfect|Perfect|LatePerfect|VeryLate");
+        // "Perfect" hasn't been a HitMargin name since the game's r150 XPerfect split
+        // (Perfect -> PerfectMinus/XPerfect/PerfectPlus); spell out the tiers explicitly.
+        var ppCombo = MarginCombos_Internal(GCS.difficulty, "PerfectMinus|XPerfect|PerfectPlus");
+        var noMiss = MarginCombos_Internal(GCS.difficulty, "VeryEarly|EarlyPerfect|PerfectMinus|XPerfect|PerfectPlus|LatePerfect|VeryLate");
         string result = "XX";
         if(ppCombo == seqID) {
             result = "PP";

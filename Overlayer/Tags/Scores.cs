@@ -15,6 +15,12 @@ public static class Scores {
     [Tag]
     [TagDesc("Current difficulty score")]
     public static int Score;
+    [Tag]
+    [TagDesc("X-Score(2 per XPerfect, 1 per -Perfect/Perfect+, 0 otherwise)")]
+    public static int XScore;
+    [Tag]
+    [TagDesc("Maximum possible X-Score for this level((Total Tile - Autoplay - Midspin) x 2)")]
+    public static int MaxXScore;
 
     public static void SetScores(HitMargin l, HitMargin n, HitMargin s, HitMargin c) {
         switch(c) {
@@ -26,7 +32,9 @@ public static class Scores {
             case HitMargin.LatePerfect:
                 Score += 150;
                 break;
+            case HitMargin.PerfectMinus:
             case HitMargin.XPerfect:
+            case HitMargin.PerfectPlus:
                 Score += 300;
                 break;
         }
@@ -39,7 +47,9 @@ public static class Scores {
             case HitMargin.LatePerfect:
                 LScore += 150;
                 break;
+            case HitMargin.PerfectMinus:
             case HitMargin.XPerfect:
+            case HitMargin.PerfectPlus:
                 LScore += 300;
                 break;
         }
@@ -52,7 +62,9 @@ public static class Scores {
             case HitMargin.LatePerfect:
                 NScore += 150;
                 break;
+            case HitMargin.PerfectMinus:
             case HitMargin.XPerfect:
+            case HitMargin.PerfectPlus:
                 NScore += 300;
                 break;
         }
@@ -65,11 +77,13 @@ public static class Scores {
             case HitMargin.LatePerfect:
                 SScore += 150;
                 break;
+            case HitMargin.PerfectMinus:
             case HitMargin.XPerfect:
+            case HitMargin.PerfectPlus:
                 SScore += 300;
                 break;
         }
     }
 
-    public static void Reset() => LScore = NScore = SScore = Score = 0;
+    public static void Reset() => LScore = NScore = SScore = Score = XScore = MaxXScore = 0;
 }
