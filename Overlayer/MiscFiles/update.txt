@@ -1,18 +1,3 @@
-﻿[ Add ]
-{ Tag }
-GPU Tags
-- GpuMemory
-- GpuMemoryGBytes
-- GpuMemoryUsage
-- GpuMemoryUsageGBytes
-- GpuSharedMemory
-- GpuSharedMemoryGBytes
-- GpuSharedMemoryUsage
-- GpuSharedMemoryUsageGBytes
-- GpuUsage
-
-[ Change ]
-Some SystemTag Descriptions
-
 [ Fix ]
-FileAttempt System
+{BestProgress:N} decimal-place argument being silently ignored
+{Memory:N} / {MemoryGBytes:N} / {GpuMemory:N} decimal-place arguments being silently ignored

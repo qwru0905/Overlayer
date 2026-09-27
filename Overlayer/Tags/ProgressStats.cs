@@ -20,7 +20,7 @@ public static class ProgressStats {
         var actualProgress = (scrController.instance?.currFloor.entryTime - firstFloorTime) / (lastFloorTime - firstFloorTime) * 100;
         return actualProgress == null ? 0 : (double)Mathf.Clamp((float)actualProgress, 0, 100);
     }
-    [Tag]
+    [Tag(ProcessingFlags = ValueProcessing.RoundNumber)]
     [TagDesc("Best progress of the level")]
     public static double BestProgress;
 

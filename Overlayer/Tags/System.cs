@@ -50,10 +50,10 @@ public static class System {
     [TagDesc("Shows the total CPU usage percentage of the entire system.\nOnly Windows Available")]
     public static float TotalCpuUsage;
 
-    [Tag(NotPlaying = true)]
+    [Tag(NotPlaying = true, ProcessingFlags = ValueProcessing.RoundNumber)]
     [TagDesc("Shows the total physical memory (RAM) available on the system in MB.\nOnly Windows Available")]
     public static float Memory;
-    [Tag(NotPlaying = true)]
+    [Tag(NotPlaying = true, ProcessingFlags = ValueProcessing.RoundNumber)]
     [TagDesc("Shows the total physical memory (RAM) available on the system in GB.\nOnly Windows Available")]
     public static float MemoryGBytes;
     [Tag(NotPlaying = true, ProcessingFlags = ValueProcessing.RoundNumber)]
@@ -69,7 +69,7 @@ public static class System {
     [TagDesc("Shows the total memory usage of the system in GB.\nOnly Windows Available")]
     public static float TotalMemoryUsageGBytes;
 
-    [Tag(NotPlaying = true)]
+    [Tag(NotPlaying = true, ProcessingFlags = ValueProcessing.RoundNumber)]
     [TagDesc("Shows the total GPU memory available on the system in MB.\nOnly Windows Available")]
     public static float GpuMemory;
     [Tag(NotPlaying = true, ProcessingFlags = ValueProcessing.RoundNumber)]
