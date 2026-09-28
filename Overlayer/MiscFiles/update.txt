@@ -1,3 +1,3 @@
 [ Fix ]
-{BestProgress:N} decimal-place argument being silently ignored
-{Memory:N} / {MemoryGBytes:N} / {GpuMemory:N} decimal-place arguments being silently ignored
+Hit / combo / score tags (Hit, Combo, Score, ...) not working after the game replaced scrMisc.GetHitMargin with GetHitMarginInDeg / GetHitMarginInSec
+Hit judgement tags now also work with the game's async input path

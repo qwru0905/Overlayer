@@ -498,9 +498,20 @@ public static class Hit {
         };
     }
 
-    public static HitMargin GetHitMargin(Difficulty diff, float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale) {
-        float angleDeg = 57.29578f * (hitangle - refangle) * (isCW ? 1 : -1);
+    public static HitMargin GetHitMarginInDeg(Difficulty diff, float hitAngle, float refAngle, bool clockwise, float floorBpm, float conductorPitch, double marginScale) {
+        float angleDeg = 57.29578f * (hitAngle - refAngle) * (clockwise ? 1 : -1);
+        return SelectHitMargin(diff, angleDeg, floorBpm, conductorPitch, marginScale);
+    }
 
+    // Async-input path of the game: it hands us a time offset (seconds) instead of angles.
+    // The game's time boundaries are the angle boundaries scaled by the same linear factor,
+    // so converting the offset to degrees and reusing the angle boundaries gives the same result.
+    public static HitMargin GetHitMarginInSec(Difficulty diff, double timeDiff, float floorBpm, float conductorPitch, double marginScale) {
+        double angleDeg = scrMisc.TimeToAngleInRad(timeDiff, floorBpm, conductorPitch, false) * 57.295780181884766;
+        return SelectHitMargin(diff, angleDeg, floorBpm, conductorPitch, marginScale);
+    }
+
+    private static HitMargin SelectHitMargin(Difficulty diff, double angleDeg, float bpmTimesSpeed, float conductorPitch, double marginScale) {
         double countedDeg = GetAdjustedAngleBoundaryInDeg(diff, HitMarginGeneral.Counted, bpmTimesSpeed, conductorPitch, marginScale);
         double perfectDeg = GetAdjustedAngleBoundaryInDeg(diff, HitMarginGeneral.Perfect, bpmTimesSpeed, conductorPitch, marginScale);
         double pureDeg = GetAdjustedAngleBoundaryInDeg(diff, HitMarginGeneral.Pure, bpmTimesSpeed, conductorPitch, marginScale);
