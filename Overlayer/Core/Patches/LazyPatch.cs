@@ -17,6 +17,7 @@ internal class LazyPatch {
     public MethodBase target;
     public MethodInfo patch;
     public LazyPatchAttribute attr;
+    public List<string> Issues { get; }
     public bool Patched { get; private set; }
     public bool Locked { get; set; }
     public int IgnorePatchCount { get; set; }
@@ -30,8 +31,14 @@ internal class LazyPatch {
         transpiler = patchType.GetMethod("Transpiler", (BindingFlags)15420);
         finalizer = patchType.GetMethod("Finalizer", (BindingFlags)15420);
         target = attr.Resolve();
-        if(attr.IsCompatible && target == null) {
-            Main.Logger.Log($"[{nameof(LazyPatch)}] {attr.Id}: {attr.TargetType}.{attr.TargetMethod} Not Resolved");
+        try {
+            Issues = LazyPatchValidator.Validate(attr, target, prefix, postfix, transpiler, finalizer);
+        } catch(Exception e) {
+            // A validator bug must never stop the mod from loading.
+            Issues = [$"Validation itself failed: {e.Message}"];
+        }
+        foreach(var issue in Issues) {
+            Main.Logger.Error($"[{nameof(LazyPatch)}] {attr.Id}: {issue}");
         }
 
         Patches.Add(attr.Id, this);

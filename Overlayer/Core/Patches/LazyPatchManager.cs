@@ -14,6 +14,7 @@ internal static class LazyPatchManager {
     public static int Count => Patches.Sum(t => t.Value.Count);
     public static bool IsInternalPatched => PatchedTriggers.Contains(LazyPatch.InternalTrigger);
     public static void Load(Assembly ass) {
+        int loaded = 0, invalid = 0;
         foreach(var type in ass.GetTypes()) {
             var lpas = type.GetCustomAttributes<LazyPatchAttribute>();
             if(lpas.Any()) {
@@ -22,9 +23,20 @@ internal static class LazyPatchManager {
                 }
 
                 foreach(var patch in lpas) {
-                    list.Add(new LazyPatch(Harmony, type, patch));
+                    var lp = new LazyPatch(Harmony, type, patch);
+                    list.Add(lp);
+                    loaded++;
+                    if(lp.Issues.Count > 0) {
+                        invalid++;
+                    }
                 }
             }
+        }
+
+        if(invalid > 0) {
+            Main.Logger.Error($"[{nameof(LazyPatch)}] Validation: {invalid}/{loaded} patches have issues (see errors above).");
+        } else {
+            Main.Logger.Log($"[{nameof(LazyPatch)}] Validation: {loaded} patches OK.");
         }
     }
     public static void Unload(Assembly ass) {

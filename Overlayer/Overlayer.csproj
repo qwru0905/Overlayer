@@ -508,6 +508,7 @@
     <Compile Include="Core\Patches\LazyPatch.cs" />
     <Compile Include="Core\Patches\LazyPatchAttribute.cs" />
     <Compile Include="Core\Patches\LazyPatchManager.cs" />
+    <Compile Include="Core\Patches\LazyPatchValidator.cs" />
     <Compile Include="Core\TextConfigImporter.cs" />
     <Compile Include="Core\ObjectManager.cs" />
     <Compile Include="Core\TextReplacing\Parsing\IParsed.cs" />
