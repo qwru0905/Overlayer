@@ -70,10 +70,34 @@ public partial class Olly {
 
         var node3_2_2 = new Node(
             Tr("So they spent quite a lot of time rewriting it from scratch.", "그래서 그걸 갈아엎느라 좀 시간을 많이 쓰셨다고 한다네요."),
-            ["..."],
+            ["...", Tr("And now?", "지금은?")],
             eye: Eye.Normal,
             mouth: Mouth.Shift,
             eyebrow: Eyebrow.NormalHigh
+        );
+
+        var node3_3 = new Node(
+            Tr("Then modlist.org announced the end of v3 support,\nsaying it couldn't keep up with the latest ADOFAI.", "그러다 modlist.org가 v3 지원 종료를 알렸어요.\n최신 얼불춤에 맞추기엔 기술적 한계가 있다면서요."),
+            ["...", Tr("So..?", "그래서..?")],
+            eye: Eye.Small,
+            mouth: Mouth.Clenched,
+            eyebrow: Eyebrow.Sad
+        );
+
+        var node3_4 = new Node(
+            Tr("v5 was still a long way off, and it was unclear whether it would work like v3.\nSo this fork was made to keep v3 going in the meantime.", "v5는 아직 멀었고 v3처럼 쓸 수 있을지도 불분명했어요.\n그래서 그동안 v3를 계속 쓸 수 있도록 이 포크를 만들었다고 해요."),
+            ["...", Tr("Really?", "진짜?")],
+            eye: Eye.Normal,
+            mouth: Mouth.Shift,
+            eyebrow: Eyebrow.NormalHigh
+        );
+
+        var node3_5 = new Node(
+            Tr("The developer doesn't have much time to put into this mod,\nso most of the code is handed off to AI.", "근데 지금 개발자는 이 모드에 쓸 시간이 많지 않아서,\n코드 대부분을 AI에게 맡기고 있다고 해요."),
+            ["..."],
+            eye: Eye.Normal,
+            mouth: Mouth.Smile,
+            eyebrow: Eyebrow.Normal
         );
 
         var node4 = new Node(
@@ -129,6 +153,12 @@ public partial class Olly {
         node3_2.Next[0] = node1;
         node3_2.Next[1] = node3_2_2;
         node3_2_2.Next[0] = node1;
+        node3_2_2.Next[1] = node3_3;
+        node3_3.Next[0] = node1;
+        node3_3.Next[1] = node3_4;
+        node3_4.Next[0] = node1;
+        node3_4.Next[1] = node3_5;
+        node3_5.Next[0] = node1;
 
         node4.Next[0] = node1;
         node4.Next[1] = node4_2;

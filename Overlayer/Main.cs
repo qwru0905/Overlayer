@@ -270,10 +270,9 @@ public static class Main {
         GUI.Draw();
         GUILayout.Space(30);
         GUILayout.BeginHorizontal();
-        if(Drawer.Button(Drawer.Icon_Discord, " Discord")) {
-            Application.OpenURL("https://discord.modlist.org/");
+        if(Drawer.Button(Drawer.Icon_Github, " Issues")) {
+            Application.OpenURL("https://github.com/qwru0905/Overlayer/issues");
         }
-        Drawer.HoverTooltip("modlist.org");
         if(Drawer.Button(Drawer.Icon_Github, " GitHub")) {
             Application.OpenURL("https://github.com/qwru0905/Overlayer");
         }

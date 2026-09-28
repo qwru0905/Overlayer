@@ -6,7 +6,7 @@ public static class Developers {
     // US
     [Tag(NotPlaying = true)]
     [TagDesc("modlist.org")]
-    public static string Developer => Main.Lang.Get("MISC_DEVELOPER", "modlist.org. Display everything as you wish. Thank you for being with Overlayer.");
+    public static string Developer => Main.Lang.Get("MISC_DEVELOPER", "modlist.org. Display everything as you wish. Thank you for being with Overlayer.\nThis fork is maintained by qwru0905.");
     [Tag(NotPlaying = true, Hide = true)]
     [TagDesc("Us")]
     public static string Modlist => "We Still Alive!";
