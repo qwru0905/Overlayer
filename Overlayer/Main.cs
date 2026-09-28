@@ -142,6 +142,8 @@ public static class Main {
 
             if(updateOnce) {
                 updateOnce = false;
+#if !DEBUG
+                // Never check for / install updates in a dev build; it would overwrite the files being developed.
                 _ = AutoUpdater.InitAndUpdate(
                     Mod,
                     Settings.AutoUpdate,
@@ -152,6 +154,7 @@ public static class Main {
                         UpdateInfo = Lang.Get("UPDATE_FAIL", "Update Fail") + ": " + err;
                     }
                 );
+#endif
             }
         } else {
             if(EgEnabled) {
@@ -272,10 +275,10 @@ public static class Main {
         }
         Drawer.HoverTooltip("modlist.org");
         if(Drawer.Button(Drawer.Icon_Github, " GitHub")) {
-            Application.OpenURL("https://github.com/modlist-org/Overlayer");
+            Application.OpenURL("https://github.com/qwru0905/Overlayer");
         }
         if(Drawer.Button(Drawer.Icon_Wiki, " Wiki")) {
-            Application.OpenURL("https://github.com/modlist-org/Overlayer/wiki");
+            Application.OpenURL("https://github.com/qwru0905/Overlayer/wiki");
         }
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();

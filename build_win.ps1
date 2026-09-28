@@ -109,23 +109,23 @@ if(Test-Path $settingsFile) {
 # Ask missing settings
 # -----------------------------
 if($null -eq $AutoOverwrite) {
-    $AutoOverwrite = (Ask "Overwrite the built files to the Mods/Overlayer folder in ADOFAI? (y/N)") -match '^[yY]'
+    $AutoOverwrite = (Ask "Overwrite the built files to the Mods/Overlayer-qwru folder in ADOFAI? (y/N)") -match '^[yY]'
 }
 
 if($AutoOverwrite -and [string]::IsNullOrWhiteSpace($DestPathInput)) {
-    $defaultPath = "C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice\Mods\Overlayer"
+    $defaultPath = "C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice\Mods\Overlayer-qwru"
 
     Log HINT "Enter the ADOFAI game folder (where the .exe is located)"
     Log HINT "Example: C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice"
-    Log HINT "Mods\Overlayer will be appended automatically"
+    Log HINT "Mods\Overlayer-qwru will be appended automatically"
 
     $_input = Ask "Enter game folder path (empty = default)"
 
     if([string]::IsNullOrWhiteSpace($_input)) {
         $DestPathInput = $defaultPath
-        Log HINT "Using default Mods/Overlayer path"
+        Log HINT "Using default Mods/Overlayer-qwru path"
     } else {
-        $DestPathInput = Join-Path $_input "Mods\Overlayer"
+        $DestPathInput = Join-Path $_input "Mods\Overlayer-qwru"
     }
 
     Log PLAN "Destination -> $DestPathInput"

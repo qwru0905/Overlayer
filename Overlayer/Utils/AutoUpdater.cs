@@ -30,7 +30,7 @@ public static class AutoUpdater {
     public static VersionType CurrentVersionType = VersionType.Unknown;
     public static bool IsUpdating { get; private set; } = false;
     public static bool RequireRestart { get; private set; }
-    public static readonly string OverlayerGithubApiLink = "https://api.github.com/repos/modlist-org/Overlayer/releases";
+    public static readonly string OverlayerGithubApiLink = "https://api.github.com/repos/qwru0905/Overlayer/releases";
     public static bool IsRateLimited { get; private set; }
 
     public static void Reload(ModEntry modEntry) {

@@ -1,7 +1,7 @@
 {
-  "Id": "Overlayer",
-  "DisplayName": "Overlayer",
-  "Author": "modlist.org",
+  "Id": "Overlayer-qwru",
+  "DisplayName": "Overlayer (qwru0905)",
+  "Author": "modlist.org, qwru0905",
   "Version": "3.49.5",
   "AssemblyName": "Overlayer.Bootstrapper.dll",
   "EntryMethod": "Overlayer.Bootstrapper.Main.Load"

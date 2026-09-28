@@ -54,6 +54,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent Condition=" '$(OS)' == 'Windows_NT' ">copy "$(TargetPath)" "$(ADOFAIPath)\Mods\Overlayer\Overlayer.Bootstrapper.dll"</PostBuildEvent>
+    <PostBuildEvent Condition=" '$(OS)' == 'Windows_NT' ">copy "$(TargetPath)" "$(ADOFAIPath)\Mods\Overlayer-qwru\Overlayer.Bootstrapper.dll"</PostBuildEvent>
   </PropertyGroup>
 </Project>
