@@ -208,13 +208,39 @@ Re-examined this directly in the decompiled 148/145 source instead of
 assuming the r147-era restore would still apply, and it doesn't: the
 picture is different from (and simpler than) the original plan above.
 
-**`scrMarginTracker.percentAcc`/`percentXAcc`/`xScore` exist as real,
-populated fields on every one of 145/148/150** (confirmed by reading
+**`scrMarginTracker.percentAcc`/`percentXAcc` exist as real, populated
+fields on every one of 145/148/150** (confirmed by reading
 `CalculatePercentAcc()` in the 148 decompile directly, not just the
-member-existence diff). So `AccuracyStats.Accuracy`/`MaxAccuracy` and
-`Scores.XScore`/`MaxXScore` in `P_scrMistakeManager.cs` can keep reading
-those fields **unconditionally on every version, no `MinVersion` branch,
-no restored old formula** — simpler than §5 originally proposed.
+member-existence diff). So `AccuracyStats.Accuracy`/`XAccuracy`/
+`AbsXAccuracy` in `P_scrMistakeManager.cs` can keep reading those fields
+**unconditionally on every version, no `MinVersion` branch, no restored
+old formula** — simpler than §5 originally proposed.
+
+**Correction found while double-checking `scrMarginTracker`'s full member
+list (not just the fields the enum-numbering diff happened to cover):**
+`maxPossibleXAcc`, `xScore`, and `maxXScore` **do not exist at all** on
+148/145's `scrMarginTracker` — not a numbering difference, the members
+are genuinely absent (confirmed: 148's class body has only
+`percentComplete`/`percentAcc`/`percentXAcc` as properties, `hitMargins`/
+`hitMarginsCount`/`deadTiles`/`deaths`/etc. as fields, `GetHits`/
+`GetDeaths` as methods — no `xScore` anywhere). The X-Score concept is
+alpha-only, introduced alongside the XPerfect split, not merely
+recomputed differently pre-150.
+
+This matters because of how Mono JITs a method: a method's IL is
+token-resolved as a whole the first time it's *called*, not per branch —
+so wrapping `tracker.maxPossibleXAcc`/`xScore`/`maxXScore` in an
+`if(version >= 150)` **inside the same method** does not help; those
+tokens would still fail to resolve on 148/145 the first time the
+*containing* method runs, even on the branch that's never taken (the
+exact mechanism that crashed `LazyPatchAttribute`'s static constructor on
+`older-2.9.8` earlier in this investigation, just for a field access
+instead of a static initializer). The fix is the same: put the
+version-specific reads in a method that is only *called* conditionally,
+so its IL is never resolved on a build where it doesn't apply.
+`AccuracyStats.MaxXAccuracy`/`AbsMaxXAccuracy` and `Scores.XScore`/
+`MaxXScore` are set to `0`/`double.NaN` (matching their `Reset()`
+defaults) on 148/145 instead.
 
 But the two fields disagree on whether an autoplay/midspin hit counts as
 a success, and *differently* depending on which field:
@@ -235,12 +261,17 @@ depending on which build produced it.
 
 **Decided: keep two families, both always available, no version branch:**
 
-1. **`AccuracyStats.Accuracy`/`MaxAccuracy`/`XAccuracy`/`AbsXAccuracy`/
-   `AbsMaxXAccuracy` and `Scores.XScore`/`MaxXScore` — unchanged.**
-   Read the game's own `percentAcc`/`percentXAcc`/`xScore`/`maxXScore`
-   fields exactly as today, on every version, no branch. Their meaning
-   is "whatever this specific game build's own native accuracy/X-Score
+1. **`AccuracyStats.Accuracy`/`XAccuracy`/`AbsXAccuracy` — unchanged**,
+   reading `percentAcc`/`percentXAcc` on every version, no branch. Their
+   meaning is "whatever this specific game build's own native accuracy
    is" — on old builds, that includes Auto by that build's own design.
+   `AccuracyStats.MaxAccuracy` is likewise unchanged — its own formula
+   (§ existing code) only calls `GetHits`/`GetDeaths`/reads
+   `hitMargins.Count`, none of which are alpha-only.
+   **`AccuracyStats.MaxXAccuracy`/`AbsMaxXAccuracy` and `Scores.XScore`/
+   `MaxXScore` move into a separate method**, only called when
+   `GameVersion.Current >= 150` (see the JIT note above — this is
+   required, not just tidiness); set to `0`/`double.NaN` otherwise.
 2. **A new, version-independent family that always applies alpha's
    exclusion weights**, computed entirely from Overlayer's own
    self-computed per-difficulty counters (`Hit.LTE`/`LVE`/`LEP`/`LPM`/
