@@ -640,6 +640,7 @@
     <Compile Include="Utils\EnumHelper.cs" />
     <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Utils\MiscUtils.cs" />
+    <Compile Include="Utils\GameVersion.cs" />
     <Compile Include="Models\ModelUtils.cs" />
     <Compile Include="CodeEditor\Impl\MovingManEditor.cs" />
     <Compile Include="Utils\UpdatePopup.cs" />
