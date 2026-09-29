@@ -221,39 +221,45 @@ public static class Hit {
     public static int CT => CTE + CTL;
     static int[] hitMarginsCount => scrController.instance?.playerOne?.marginTracker?.hitMarginsCount;
 
+    // GameMargin resolves "X" against whichever HitMargin type is actually loaded (see
+    // GameMargin.cs), instead of (int)HitMargin.X, which is fixed to Overlayer's alpha-compiled
+    // literal and can point at the wrong slot - or a member that doesn't exist at all - on an
+    // older game build. Returns 0 when the member doesn't exist on the running build.
+    static int GameCount(string name) => GameMargin.IndexOf(name) is int i ? hitMarginsCount?[i] ?? 0 : 0;
+
     [Tag]
     [TagDesc("Official Too Early")]
-    public static int OTE => hitMarginsCount?[(int)HitMargin.TooEarly] ?? 0;
+    public static int OTE => GameCount(nameof(HitMargin.TooEarly));
     [Tag]
     [TagDesc("Official Very Early")]
-    public static int OVE => hitMarginsCount?[(int)HitMargin.VeryEarly] ?? 0;
+    public static int OVE => GameCount(nameof(HitMargin.VeryEarly));
     [Tag]
     [TagDesc("Official Early Perfect")]
-    public static int OEP => hitMarginsCount?[(int)HitMargin.EarlyPerfect] ?? 0;
+    public static int OEP => GameCount(nameof(HitMargin.EarlyPerfect));
     [Tag]
     [TagDesc("Official Perfect")]
     public static int OP => OPP + OA;
     [Tag]
     [TagDesc("Official Late Perfect")]
-    public static int OLP => hitMarginsCount?[(int)HitMargin.LatePerfect] ?? 0;
+    public static int OLP => GameCount(nameof(HitMargin.LatePerfect));
     [Tag]
     [TagDesc("Normal Very Late")]
-    public static int OVL => hitMarginsCount?[(int)HitMargin.VeryLate] ?? 0;
+    public static int OVL => GameCount(nameof(HitMargin.VeryLate));
     [Tag]
     [TagDesc("Official Too Late")]
-    public static int OTL => hitMarginsCount?[(int)HitMargin.TooLate] ?? 0;
+    public static int OTL => GameCount(nameof(HitMargin.TooLate));
     [Tag]
     [TagDesc("Official Perfect (Only Auto)")]
-    public static int OA => hitMarginsCount?[(int)HitMargin.Auto] ?? 0;
+    public static int OA => GameCount(nameof(HitMargin.Auto));
     [Tag]
     [TagDesc("Official Perfect Minus (early side of the perfect window)")]
-    public static int OPM => hitMarginsCount?[(int)HitMargin.PerfectMinus] ?? 0;
+    public static int OPM => GameCount(nameof(HitMargin.PerfectMinus));
     [Tag]
     [TagDesc("Official X Perfect (center of the perfect window)")]
-    public static int OXP => hitMarginsCount?[(int)HitMargin.XPerfect] ?? 0;
+    public static int OXP => GameCount(nameof(HitMargin.XPerfect));
     [Tag]
     [TagDesc("Official Perfect Plus (late side of the perfect window)")]
-    public static int OPL => hitMarginsCount?[(int)HitMargin.PerfectPlus] ?? 0;
+    public static int OPL => GameCount(nameof(HitMargin.PerfectPlus));
     [Tag]
     [TagDesc("Official Perfect (Only Player, Minus + X + Plus)")]
     public static int OPP => OPM + OXP + OPL;
@@ -275,10 +281,10 @@ public static class Hit {
 
     [Tag]
     [TagDesc("Number of Misses")]
-    public static int MissCount => scrController.instance?.playerOne?.marginTracker?.GetHits(HitMargin.FailMiss) ?? 0;
+    public static int MissCount => GameMargin.TryGet(nameof(HitMargin.FailMiss)) is HitMargin m ? scrController.instance?.playerOne?.marginTracker?.GetHits(m) ?? 0 : 0;
     [Tag]
     [TagDesc("Number of Overloads")]
-    public static int Overloads => scrController.instance?.playerOne?.marginTracker?.GetHits(HitMargin.FailOverload) ?? 0;
+    public static int Overloads => GameMargin.TryGet(nameof(HitMargin.FailOverload)) is HitMargin m ? scrController.instance?.playerOne?.marginTracker?.GetHits(m) ?? 0 : 0;
     [Tag]
     [TagDesc("MissCount + Overloads")]
     public static int Fail => MissCount + Overloads;
