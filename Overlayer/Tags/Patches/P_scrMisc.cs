@@ -19,7 +19,11 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         Hit.FixMargin(controller, ref Hit.Normal);
         Hit.FixMargin(controller, ref Hit.Strict);
         Hit.Current = result = Hit.GetCHit(GCS.difficulty);
-        if(!Hit.ControllerIsSafe(controller)) {
+        // An autoplay/midspin hit is forced to XPerfect above so combo-continuation still sees
+        // it as a perfect (matching the game's own PerfectHitMargins), but it isn't a genuine
+        // XPerfect-timing hit, so it shouldn't inflate the XP/etc. counts (matching the game's
+        // own PlayerHitMarginWeights/HitMarginXScores, which give it no weight/score either).
+        if(!Hit.ControllerIsSafe(controller) && !Hit.IsAutoOrMidspin(controller)) {
             Hit.IncreaseCount(Difficulty.Lenient, Hit.Lenient);
             Hit.IncreaseCount(Difficulty.Normal, Hit.Normal);
             Hit.IncreaseCount(Difficulty.Strict, Hit.Strict);
@@ -41,15 +45,19 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         Hit.FixMargin(controller, ref l);
         Hit.FixMargin(controller, ref n);
         Hit.FixMargin(controller, ref s);
-        Scores.SetScores(l, n, s, result);
-        ComboStats.Combos_Set(Difficulty.Lenient, l);
-        ComboStats.Combos_Set(Difficulty.Normal, n);
-        ComboStats.Combos_Set(Difficulty.Strict, s);
+        // See the comment in ApplyHit: an autoplay/midspin hit keeps the combo alive above, but
+        // shouldn't add Score or move a MarginCombo streak (the game gives it no X-Score either).
+        if(!Hit.IsAutoOrMidspin(controller)) {
+            Scores.SetScores(l, n, s, result);
+            ComboStats.Combos_Set(Difficulty.Lenient, l);
+            ComboStats.Combos_Set(Difficulty.Normal, n);
+            ComboStats.Combos_Set(Difficulty.Strict, s);
+        }
         ComboStats.SetMarginCombos();
     }
 
     private static void ApplyScores(scrController controller, HitMargin l, HitMargin n, HitMargin s, HitMargin result) {
-        if(Hit.ControllerIsSafe(controller)) {
+        if(Hit.ControllerIsSafe(controller) || Hit.IsAutoOrMidspin(controller)) {
             return;
         }
         Hit.FixMargin(controller, ref l);

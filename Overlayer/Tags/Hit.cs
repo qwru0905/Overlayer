@@ -295,6 +295,16 @@ public static class Hit {
 
     public static bool ControllerIsSafe(scrController ctrl) => ctrl.currFloor?.isSafe ?? false;
 
+    // Same condition FixMargin uses to force XPerfect below. The game's own HitMarginHelper
+    // treats these two cases differently depending on what it's used for: PerfectHitMargins
+    // (combo-continuation) includes Auto/Midspin, but PlayerHitMarginWeights and
+    // HitMarginXScores (accuracy % and X-Score) have no entry for them at all - an autoplay/
+    // midspin hit earns 0 X-Score and doesn't move the accuracy percentage either way. Callers
+    // that mirror the accuracy/score side of that split (hit-margin counts, Overlayer's own
+    // Score, MarginCombo) should check this and skip, instead of counting the forced XPerfect.
+    public static bool IsAutoOrMidspin(scrController ctrl) =>
+        ctrl.gameworld && (ctrl.playerOne.midspinInfiniteMargin || (RDC.auto && !RDC.useOldAuto));
+
     public static void FixMargin(scrController ctrl, ref HitMargin hitMargin) {
         if(ctrl.gameworld) {
             if(ctrl.noFailInfiniteMargin) {
