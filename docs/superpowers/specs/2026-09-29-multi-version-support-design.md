@@ -92,14 +92,15 @@ autoplay/midspin hit to `HitMargin.XPerfect` (so combo-continuation
 treats it as a perfect, matching the game's own
 `HitMarginHelper.PerfectHitMargins`), but that same forced value was also
 flowing into the XP/etc. counts, `Scores.Score`, and `MarginCombo` —
-none of which the game itself credits (`PlayerHitMarginWeights` and
-`HitMarginXScores` have no entry for Auto/Midspin: 0 accuracy weight, 0
-X-Score). Fixed on `v3` at `1a60ee7` (`Hit.IsAutoOrMidspin`, checked in
-`P_scrMisc.cs` before counting/scoring/margin-combo). This branch is
-rebased on top of it. It's unrelated to multi-version support (the bug
-exists on alpha too, independent of which build is running) and needs no
-special per-version handling here — `IsAutoOrMidspin` only checks
-booleans (`midspinInfiniteMargin`, `RDC.auto`), not enum numbering.
+none of which the game itself credits toward *those specific* stats
+(see the `XAccuracy`/`X-Score` weight tables in §5 below: they have no
+entry for Auto/Midspin at all). Fixed on `v3` at `1a60ee7`
+(`Hit.IsAutoOrMidspin`, checked in `P_scrMisc.cs` before
+counting/scoring/margin-combo). This branch is rebased on top of it. It's
+unrelated to multi-version support (the bug exists on alpha too,
+independent of which build is running) and needs no special per-version
+handling here — `IsAutoOrMidspin` only checks booleans
+(`midspinInfiniteMargin`, `RDC.auto`), not enum numbering.
 
 ## Design
 
@@ -201,21 +202,68 @@ for whichever pair doesn't apply to the running build — right now it
 would flag 2 false positives per old build (confirmed in this session's
 harness run).
 
-### 5. `P_scrMistakeManager.cs` — accuracy, version-branched
+### 5. Accuracy/X-Score — two families, not a version branch
 
-For version >= 150: unchanged (current code, reads the game's
-`percentAcc`/`percentXAcc`/`xScore`/etc. fields, which only carry
-meaningful split data since 150).
+Re-examined this directly in the decompiled 148/145 source instead of
+assuming the r147-era restore would still apply, and it doesn't: the
+picture is different from (and simpler than) the original plan above.
 
-For version < 150: restore the pre-XPerfect-split accuracy computation
-that existed at commit `ca3c732` (git history, "Fix Overlayer for the
-current ADOFAI build (Unity 6000.3.10f1 / r147)") — it computes
-`Accuracy`/`XAccuracy`/`MaxAccuracy`/etc. purely from Overlayer's own
-`Hit.LTE`/`LVE`/.../ counters (self-consistent, no game enum crossing at
-all). `Scores.XScore`/`MaxXScore` are left at their `Reset()` default
-(0) pre-150, since the game has no X-Score concept there — matches the
-approved policy of degrading the game-reported values while keeping
-Overlayer's own computation intact.
+**`scrMarginTracker.percentAcc`/`percentXAcc`/`xScore` exist as real,
+populated fields on every one of 145/148/150** (confirmed by reading
+`CalculatePercentAcc()` in the 148 decompile directly, not just the
+member-existence diff). So `AccuracyStats.Accuracy`/`MaxAccuracy` and
+`Scores.XScore`/`MaxXScore` in `P_scrMistakeManager.cs` can keep reading
+those fields **unconditionally on every version, no `MinVersion` branch,
+no restored old formula** — simpler than §5 originally proposed.
+
+But the two fields disagree on whether an autoplay/midspin hit counts as
+a success, and *differently* depending on which field:
+
+| | alpha (150) `percentAcc` | alpha `percentXAcc`/`xScore` | 148/145 `percentAcc` **and** `percentXAcc` |
+|---|---|---|---|
+| formula | `GetHits(PerfectHitMargins) + GetHits(SemiPerfectHitMargins)` over `hitMargins.Count + GetDeaths()` | `GetHitsWithWeights(PlayerHitMarginTypes)`, weights below, over `playerHitMarginCount` (excludes non-listed margins entirely) | `GetHits(Perfect, EarlyPerfect, LatePerfect, Auto)` (Acc) / same idea with hand-written weights (XAcc), both over `hitMargins.Count` |
+| Auto/Midspin | **counted as full success** (`PerfectHitMargins` includes `Auto`/`Midspin`/`Multipress`) | **weight 0, excluded from the denominator too** (`PlayerHitMarginWeights` has no entry for `Auto`/`Midspin`/`Multipress`/`OverPress`) | **counted as full-weight success** (explicitly named in the formula) |
+
+So: alpha's plain `Accuracy` already agrees with old versions (Auto =
+success) — nothing to fix there. Only alpha's `XAccuracy`/`X-Score`
+introduced the "Auto doesn't count" idea, and old versions' own
+`percentXAcc`/`xScore` never adopted it (that distinction didn't exist
+before the XPerfect split). This is exactly what was flagged as
+TUF-preferred: a version-consistent X-Accuracy/X-Score that always
+excludes Auto/Midspin, rather than one whose meaning silently changes
+depending on which build produced it.
+
+**Decided: keep two families, both always available, no version branch:**
+
+1. **`AccuracyStats.Accuracy`/`MaxAccuracy`/`XAccuracy`/`AbsXAccuracy`/
+   `AbsMaxXAccuracy` and `Scores.XScore`/`MaxXScore` — unchanged.**
+   Read the game's own `percentAcc`/`percentXAcc`/`xScore`/`maxXScore`
+   fields exactly as today, on every version, no branch. Their meaning
+   is "whatever this specific game build's own native accuracy/X-Score
+   is" — on old builds, that includes Auto by that build's own design.
+2. **A new, version-independent family that always applies alpha's
+   exclusion weights**, computed entirely from Overlayer's own
+   self-computed per-difficulty counters (`Hit.LTE`/`LVE`/`LEP`/`LPM`/
+   `LXP`/`LPP`/`LLP`/`LVL`/`LTL`, already correct on every version per
+   the "self-consistent" analysis above — no `GameMargin` lookup needed
+   for these), weighted with the exact `HitMarginHelper.
+   PlayerHitMarginWeights` table (`XPerfect`/`PerfectMinus`/
+   `PerfectPlus`=1.0, `EarlyPerfect`/`LatePerfect`=0.75, `VeryEarly`/
+   `VeryLate`=0.4, `TooEarly`/`TooLate`=0.2, `FailedFloor`=0.2,
+   `FailMiss`/`FailOverload`=0.0), copied verbatim so the number matches
+   alpha's `XAccuracy` bit-for-bit when actually running on alpha.
+   `FailedFloor`/`FailMiss`/`FailOverload` aren't part of Overlayer's own
+   classification (they're game override states), so this family reads
+   them via `GameMargin` (§2) — `FailedFloor` resolves to nothing pre-150
+   and is simply omitted, same reasoning as the `Midspin` case in §2.
+   **Naming (proposed, open to a different name during review):**
+   `AccuracyStats.TrueAccuracy`/`TrueXAccuracy` and `Scores.TrueXScore`/
+   `TrueMaxXScore`, new tags under `Tags.Attributes.Tag` like their
+   siblings.
+
+This is a real scope addition beyond "make 145/148 not crash" (a second,
+always-on accuracy system) — called out explicitly in case it should be
+split into its own follow-up instead of landing in this branch.
 
 ### 6. Testing (no way to launch the old game builds interactively here)
 
@@ -229,7 +277,19 @@ Overlayer's own computation intact.
     expected present/absent set per build,
   - feeds `Hit.GetHitMarginInDeg` a handful of angle/bpm combinations and
     asserts `NameOf(...)` produces the intended English key on each
-    build (catches any accidental `.ToString()` reintroduction).
+    build (catches any accidental `.ToString()` reintroduction),
+  - confirms `scrMarginTracker` actually exposes `percentAcc`/
+    `percentXAcc`/`xScore`/`maxXScore` as readable members on all three
+    builds (§5 relies on this instead of a version branch — should be
+    caught by `LazyPatchValidator` already for anything Harmony patches,
+    but these are plain field/property reads, not patch targets, so this
+    check is the only thing that would catch it),
+  - computes `TrueAccuracy`/`TrueXAccuracy` from a scripted sequence of
+    hits on the 150 build and asserts it matches the real
+    `AccuracyStats.XAccuracy` for that same sequence (proves the copied
+    weight table is correct), then runs the same sequence through the
+    148/145 assemblies and asserts `TrueXAccuracy` stays identical while
+    `AccuracyStats.XAccuracy` (game-native) differs by including Auto.
 - Manual: the user running the mod on the `older`/`general` Steam branch
   before release, since no test here substitutes for seeing real hit
   text/combo/accuracy in-game.
@@ -270,8 +330,11 @@ Overlayer's own computation intact.
 - `Overlayer/Tags/Hit.cs` — `LHit`/`NHit`/`SHit`/`CHit` (§3),
   `OTE`..`OPL`/`MissCount`/`Overloads` (§2).
 - `Overlayer/Tags/Patches/P_scrMisc.cs` — version-gated patch pairs (§4).
-- `Overlayer/Tags/Patches/P_scrMistakeManager.cs` — version-branched
-  accuracy (§5).
+- `Overlayer/Tags/Patches/P_scrMistakeManager.cs` — compute the new
+  `TrueAccuracy`/`TrueXAccuracy`/`TrueXScore` family alongside the
+  existing (unchanged) game-native reads (§5).
+- `Overlayer/Tags/AccuracyStats.cs`, `Overlayer/Tags/Scores.cs` — new
+  `True*` tags (§5). Existing tags in both files are unchanged.
 
-No changes expected to `Scores.cs`, `ComboStats.cs`, the scripting layer,
-or the updater.
+No changes expected to `ComboStats.cs`, the scripting layer, or the
+updater.
