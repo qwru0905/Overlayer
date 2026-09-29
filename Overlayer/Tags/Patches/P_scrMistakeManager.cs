@@ -1,7 +1,7 @@
 using Overlayer.Core.Patches;
-using Overlayer.Tags;
 using Overlayer.Utils;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Overlayer.Tags.Patches;
 
@@ -21,6 +21,11 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
         // not just a numbering difference), so a reference to them anywhere in a method that DOES
         // get called on 148/145 would fail even on a branch that's never taken. Keeping them in a
         // separate, conditionally-CALLED method is what actually protects against that.
+        // NoInlining: if Mono ever inlined this into Postfix, the whole point of splitting it out
+        // (so 148/145 never JIT-resolves the alpha-only xScore/maxXScore/maxPossibleXAcc members)
+        // would silently stop working. Cheap insurance for a correctness property this file exists
+        // to guarantee.
+        [MethodImpl(MethodImplOptions.NoInlining)]
         static void ApplyAlphaOnlyXScoreFields(scrMarginTracker tracker, double checkpointMinus) {
             AccuracyStats.AbsMaxXAccuracy = 100.0 * tracker.maxPossibleXAcc;
             AccuracyStats.MaxXAccuracy = AccuracyStats.AbsMaxXAccuracy * checkpointMinus;
@@ -58,9 +63,22 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
             double accBonus = (perfectFamily * 0.0001) - (failedFloorCount * 0.0001);
             AccuracyStats.CAccuracy = 100.0 * (accRatio + accBonus);
 
+            // Alpha's own percentXAcc also applies this checkpoint discount (Math.Pow(0.9875,
+            // checkpointsUsed)) before it's read into AccuracyStats.XAccuracy - match it here too,
+            // so CXAccuracy tracks XAccuracy's philosophy (checkpoint-discounted) rather than
+            // AbsXAccuracy's (checkpoint-free). Alpha also skips this in the level editor
+            // (scnEditor.instance) - not replicated here on purpose: scnEditor derives from
+            // UnityEngine.Object, and touching its .instance would make this method (deliberately
+            // kept callable without a live scrController/ADOBase.controller - see the class
+            // comment) hit the same native-icall wall as everything else that touches a
+            // UnityEngine.Object-derived instance outside the real engine. checkpointsUsed is a
+            // plain static field, not itself Object-derived, and is 0 outside a real playthrough
+            // anyway, so this only matters in the editor specifically, where CXAccuracy isn't a
+            // meaningful metric to begin with.
             double xWeighted = (Hit.CP * 1.0) + ((Hit.CEP + Hit.CLP) * 0.75) + ((Hit.CVE + Hit.CVL) * 0.4) + ((Hit.CTE + Hit.CTL) * 0.2) + (failedFloorCount * 0.2);
             int xDenominator = Hit.CTE + Hit.CVE + Hit.CEP + Hit.CP + Hit.CLP + Hit.CVL + Hit.CTL + failedFloorCount + failMissCount + failOverloadCount;
-            AccuracyStats.CXAccuracy = xDenominator == 0 ? 0.0 : 100.0 * (xWeighted / xDenominator);
+            double checkpointMinus = Math.Pow(0.9875, scrController.checkpointsUsed);
+            AccuracyStats.CXAccuracy = xDenominator == 0 ? 0.0 : 100.0 * (xWeighted / xDenominator) * checkpointMinus;
 
             // Mirrors HitMarginHelper.HitMarginXScores exactly: XPerfect=2, PerfectMinus/PerfectPlus=1, everything else=0.
             Scores.CXScore = (Hit.CXP * 2) + Hit.CPM + Hit.CPP;
@@ -105,8 +123,11 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
                 // the raw HitMargin literal this used before could read the wrong slot (e.g.
                 // LatePerfect's alpha value lands on TooLate's slot on 148) or throw
                 // IndexOutOfRangeException outright (Midspin/FailedFloor's alpha values are past
-                // the end of 148's shorter enum).
-                int perfectAll = tracker.GetHits(GameMargin.Existing(nameof(HitMargin.PerfectMinus), nameof(HitMargin.XPerfect), nameof(HitMargin.PerfectPlus), nameof(HitMargin.Auto), nameof(HitMargin.Midspin), nameof(HitMargin.Multipress)));
+                // the end of 148's shorter enum). "Perfect" is pre-150's own name for the whole
+                // un-split perfect window (148's CalculatePercentAcc counts it the same way alpha
+                // counts PerfectMinus/XPerfect/PerfectPlus together) - it resolves to nothing on
+                // alpha (where the split replaced it), so this is a no-op there.
+                int perfectAll = tracker.GetHits(GameMargin.Existing(nameof(HitMargin.PerfectMinus), nameof(HitMargin.XPerfect), nameof(HitMargin.PerfectPlus), "Perfect", nameof(HitMargin.Auto), nameof(HitMargin.Midspin), nameof(HitMargin.Multipress)));
                 int semiPerfect = tracker.GetHits(GameMargin.Existing(nameof(HitMargin.EarlyPerfect), nameof(HitMargin.LatePerfect)));
                 int failedFloor = tracker.GetHits(GameMargin.Existing(nameof(HitMargin.FailedFloor)));
                 int deaths = tracker.GetDeaths();

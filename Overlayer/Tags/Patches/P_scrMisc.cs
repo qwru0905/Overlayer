@@ -11,14 +11,14 @@ namespace Overlayer.Tags.Patches;
 public class P_scrMisc : PatchBase<P_scrMisc> {
     private static bool IsFreeroam(scrController controller) => controller && controller.currFloor.freeroam;
 
-    private static void ApplyHit(scrController controller, HitMargin l, HitMargin n, HitMargin s, ref HitMargin result) {
+    private static void ApplyHitCommon(scrController controller, HitMargin l, HitMargin n, HitMargin s) {
         Hit.Lenient = l;
         Hit.Normal = n;
         Hit.Strict = s;
         Hit.FixMargin(controller, ref Hit.Lenient);
         Hit.FixMargin(controller, ref Hit.Normal);
         Hit.FixMargin(controller, ref Hit.Strict);
-        Hit.Current = result = Hit.GetCHit(GCS.difficulty);
+        Hit.Current = Hit.GetCHit(GCS.difficulty);
         // An autoplay/midspin hit is forced to XPerfect above so combo-continuation still sees
         // it as a perfect (matching the game's own PerfectHitMargins), but it isn't a genuine
         // XPerfect-timing hit, so it shouldn't inflate the XP/etc. counts (matching the game's
@@ -29,6 +29,25 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
             Hit.IncreaseCount(Difficulty.Strict, Hit.Strict);
             Hit.IncreaseCCount(Hit.Current);
         }
+    }
+
+    // 150+: Overlayer is compiled against alpha, so feeding the game back Overlayer's own
+    // alpha-literal classification via __result is self-consistent (CurrentBuild == CompileTarget)
+    // - the game reads the exact same numbering it was given.
+    private static void ApplyHit(scrController controller, HitMargin l, HitMargin n, HitMargin s, ref HitMargin result) {
+        ApplyHitCommon(controller, l, n, s);
+        result = Hit.Current;
+    }
+
+    // Pre-150: must NOT write __result. The old scrMisc.GetHitMargin's caller passes its return
+    // value to scrMisc.IsValidHit(hitMargin), which compares it against THIS BUILD's own HitMargin
+    // numbering to decide whether the hit counts at all. Writing Overlayer's alpha-numbered
+    // classification back made the game reject LatePerfect/VeryLate hits outright, and - under the
+    // PurePerfectOnly/PerfectsOnly settings - even reject dead-center XPerfect/PerfectPlus hits
+    // (confirmed against 148's real IsValidHit). Compute Overlayer's own values for internal
+    // bookkeeping only, and leave __result exactly as the original game method set it.
+    private static void ApplyHitReadOnly(scrController controller, HitMargin l, HitMargin n, HitMargin s) {
+        ApplyHitCommon(controller, l, n, s);
     }
 
     private static void ApplyCombo(scrController controller, HitMargin l, HitMargin n, HitMargin s, HitMargin result) {
@@ -140,17 +159,15 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         nameof(Hit.LSlow), nameof(Hit.NSlow), nameof(Hit.SSlow), nameof(Hit.CSlow)
     ])]
     public static class Hit__GetHitMargin {
-        public static bool Prefix(float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale, ref HitMargin __result) {
+        public static void Postfix(float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale) {
             var controller = scrController.instance;
             if(IsFreeroam(controller)) {
-                return true;
+                return;
             }
-            ApplyHit(controller,
+            ApplyHitReadOnly(controller,
                 Hit.GetHitMarginInDeg(Difficulty.Lenient, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
                 Hit.GetHitMarginInDeg(Difficulty.Normal, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
-                Hit.GetHitMarginInDeg(Difficulty.Strict, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
-                ref __result);
-            return false;
+                Hit.GetHitMarginInDeg(Difficulty.Strict, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale));
         }
     }
     #endregion
@@ -212,7 +229,12 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         nameof(ComboStats.SpecialPlayMark)
     ])]
     public static class Combo__GetHitMargin {
-        public static void Postfix(float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale, ref HitMargin __result) {
+        // See Hit__GetHitMargin: this patch doesn't write __result, so it holds the game's own
+        // correctly-numbered value here - but ApplyCombo's "is this a perfect" check and
+        // Scores.SetScores compare against Overlayer's own alpha-literal classification (the same
+        // self-consistent switches every other patch uses), so compute the current-difficulty
+        // value fresh instead of reading __result.
+        public static void Postfix(float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale) {
             var controller = scrController.instance;
             if(IsFreeroam(controller)) {
                 return;
@@ -221,7 +243,7 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
                 Hit.GetHitMarginInDeg(Difficulty.Lenient, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
                 Hit.GetHitMarginInDeg(Difficulty.Normal, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
                 Hit.GetHitMarginInDeg(Difficulty.Strict, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
-                __result);
+                Hit.GetHitMarginInDeg(GCS.difficulty, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale));
         }
     }
     #endregion
@@ -268,7 +290,9 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         nameof(Scores.LScore), nameof(Scores.NScore), nameof(Scores.SScore), nameof(Scores.Score)
     ])]
     public static class Scores__GetHitMargin {
-        public static void Postfix(float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale, ref HitMargin __result) {
+        // See Combo__GetHitMargin: compute the current-difficulty value fresh instead of reading
+        // __result (the game's own, differently-numbered value on this build).
+        public static void Postfix(float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale) {
             var controller = scrController.instance;
             if(IsFreeroam(controller)) {
                 return;
@@ -277,7 +301,7 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
                 Hit.GetHitMarginInDeg(Difficulty.Lenient, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
                 Hit.GetHitMarginInDeg(Difficulty.Normal, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
                 Hit.GetHitMarginInDeg(Difficulty.Strict, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
-                __result);
+                Hit.GetHitMarginInDeg(GCS.difficulty, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale));
         }
     }
     #endregion

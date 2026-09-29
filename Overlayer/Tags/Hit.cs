@@ -294,7 +294,10 @@ public static class Hit {
     public static int OPL => GameCount(nameof(HitMargin.PerfectPlus));
     [Tag]
     [TagDesc("Official Perfect (Only Player, Minus + X + Plus)")]
-    public static int OPP => OPM + OXP + OPL;
+    // Pre-150 has no PerfectMinus/XPerfect/PerfectPlus split (OPM/OXP/OPL are all 0 there, per
+    // GameCount's "member doesn't exist -> 0" contract) - fall back to that build's own single
+    // "Perfect" slot instead of silently reporting 0 for what's actually a normal perfect count.
+    public static int OPP => GameMargin.TryGet(nameof(HitMargin.XPerfect)) != null ? OPM + OXP + OPL : GameCount("Perfect");
     [Tag]
     [TagDesc("Fast judgment in Official")]
     public static int OFast => OTE + OVE + OEP;
