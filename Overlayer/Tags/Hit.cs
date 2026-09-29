@@ -20,16 +20,48 @@ public static class Hit {
     public static HitMargin Current;
     [Tag]
     [TagDesc("Lenient Hit")]
-    public static string LHit(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => RDString.Get("HitMargin." + Lenient).Trim(maxLength, afterTrimStr);
+    public static string LHit(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => HitText(Lenient).Trim(maxLength, afterTrimStr);
     [Tag]
     [TagDesc("Normal Hit")]
-    public static string NHit(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => RDString.Get("HitMargin." + Normal).Trim(maxLength, afterTrimStr);
+    public static string NHit(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => HitText(Normal).Trim(maxLength, afterTrimStr);
     [Tag]
     [TagDesc("Strict Hit")]
-    public static string SHit(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => RDString.Get("HitMargin." + Strict).Trim(maxLength, afterTrimStr);
+    public static string SHit(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => HitText(Strict).Trim(maxLength, afterTrimStr);
     [Tag]
     [TagDesc("Current Hit")]
-    public static string CHit(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => RDString.Get("HitMargin." + Current).Trim(maxLength, afterTrimStr);
+    public static string CHit(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => HitText(Current).Trim(maxLength, afterTrimStr);
+
+    // "HitMargin." + margin.ToString() (the old code) asks the CLR to look up the value in the
+    // RUNTIME-LOADED HitMargin type's own name table, not Overlayer's compiled intent - on 148,
+    // value 4 is named "LatePerfect", so an XPerfect hit (Overlayer's own classification) would
+    // display the "LatePerfect" localization string. NameOf maps by comparing against Overlayer's
+    // OWN compiled literals (self-consistent - see the spec's "self-consistent" section), which is
+    // safe, then HitText falls back from the 3-way split's key to the pre-150 "Perfect" key when
+    // the split-specific key doesn't exist yet on this build's localization table.
+    static string NameOf(HitMargin m) => m switch {
+        HitMargin.TooEarly => nameof(HitMargin.TooEarly),
+        HitMargin.VeryEarly => nameof(HitMargin.VeryEarly),
+        HitMargin.EarlyPerfect => nameof(HitMargin.EarlyPerfect),
+        HitMargin.PerfectMinus => nameof(HitMargin.PerfectMinus),
+        HitMargin.XPerfect => nameof(HitMargin.XPerfect),
+        HitMargin.PerfectPlus => nameof(HitMargin.PerfectPlus),
+        HitMargin.LatePerfect => nameof(HitMargin.LatePerfect),
+        HitMargin.VeryLate => nameof(HitMargin.VeryLate),
+        HitMargin.TooLate => nameof(HitMargin.TooLate),
+        HitMargin.FailMiss => nameof(HitMargin.FailMiss), // FixMargin's noFailInfiniteMargin branch can set this
+        _ => m.ToString(), // shouldn't happen - Lenient/Normal/Strict/Current only ever hold one of the above - but degrade instead of throwing
+    };
+
+    static string HitText(HitMargin margin) {
+        string text = RDString.GetWithCheck("HitMargin." + NameOf(margin), out bool exists);
+        if (!exists && margin is HitMargin.PerfectMinus or HitMargin.XPerfect or HitMargin.PerfectPlus) {
+            // Pre-150 localization has no PerfectMinus/XPerfect/PerfectPlus entries (that 3-way
+            // split didn't exist yet), only a single "Perfect". "Perfect" isn't a member of the
+            // HitMargin Overlayer compiles against (alpha), so this is a plain string, not nameof.
+            text = RDString.Get("HitMargin.Perfect");
+        }
+        return text;
+    }
 
     // Lenient
     [Tag]
