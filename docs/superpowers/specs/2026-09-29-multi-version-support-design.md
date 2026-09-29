@@ -1,6 +1,6 @@
 # Multi-version support (r145/r148/r150) — design
 
-Status: draft, pending review.
+Status: implemented on `feat/multi-version-support`, pending in-game verification (see plan Task 8).
 Branch: `feat/multi-version-support` (based on `v3`, rebased after
 `v3`@`1a60ee7` — see "Related fix already on `v3`" below).
 
