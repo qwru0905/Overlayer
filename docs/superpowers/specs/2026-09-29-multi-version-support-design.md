@@ -1,7 +1,8 @@
 # Multi-version support (r145/r148/r150) — design
 
 Status: draft, pending review.
-Branch: `feat/multi-version-support` (based on `v3`).
+Branch: `feat/multi-version-support` (based on `v3`, rebased after
+`v3`@`1a60ee7` — see "Related fix already on `v3`" below).
 
 ## Goal
 
@@ -84,6 +85,22 @@ Everything else (the self-computed classification, `ComboStats`'s
 `Combos[(int)difficulty][(int)margin]`, `Scores.cs`'s switches) needs no
 change: it is Overlayer's own literals in, Overlayer's own literals out.
 
+### Related fix already on `v3` (not part of this change, but now in its history)
+
+While investigating this, found that `Hit.FixMargin` forces an
+autoplay/midspin hit to `HitMargin.XPerfect` (so combo-continuation
+treats it as a perfect, matching the game's own
+`HitMarginHelper.PerfectHitMargins`), but that same forced value was also
+flowing into the XP/etc. counts, `Scores.Score`, and `MarginCombo` —
+none of which the game itself credits (`PlayerHitMarginWeights` and
+`HitMarginXScores` have no entry for Auto/Midspin: 0 accuracy weight, 0
+X-Score). Fixed on `v3` at `1a60ee7` (`Hit.IsAutoOrMidspin`, checked in
+`P_scrMisc.cs` before counting/scoring/margin-combo). This branch is
+rebased on top of it. It's unrelated to multi-version support (the bug
+exists on alpha too, independent of which build is running) and needs no
+special per-version handling here — `IsAutoOrMidspin` only checks
+booleans (`midspinInfiniteMargin`, `RDC.auto`), not enum numbering.
+
 ## Design
 
 ### 1. Version detection (reuse, don't duplicate)
@@ -129,6 +146,18 @@ Fixes applied with this helper:
   `PerfectMinus`/`XPerfect`/`PerfectPlus`/`Midspin`/`FailedFloor` instead
   of passing a wrong/misresolved value.
 
+**Midspin vs. autoplay, specifically:** pre-150 game code has no
+`Midspin` member at all — verified in the decompiled 148 source, a
+midspin-forced hit and a true autoplay hit are *both* classified as the
+single `HitMargin.Auto` by the game itself (`hitMargin2 = HitMargin.Auto`
+fires for either `player.midspinInfiniteMargin` or `player.auto`). So
+`GameMargin.Existing("PerfectMinus", "XPerfect", "PerfectPlus", "Auto",
+"Midspin", "Multipress")` on 148/145 naturally reduces to `[Auto,
+Multipress]` — dropping `"Midspin"` loses nothing, because the game's own
+`hitMarginsCount[Auto]` on those builds *already* holds both the true
+autoplay and the midspin hits pre-merged. No special-casing needed beyond
+the existing-name filter.
+
 ### 3. Display text (`Hit.LHit`/`NHit`/`SHit`/`CHit`)
 
 Replace `"HitMargin." + Lenient` (implicit `.ToString()`, runtime-type
@@ -144,13 +173,18 @@ static string NameOf(HitMargin m) => m switch {
 };
 ```
 
-**Open question for review:** pre-150, the game's own localization table
-has no `HitMargin.XPerfect`/`PerfectMinus`/`PerfectPlus` entries (the
-split didn't exist yet), only `HitMargin.Perfect`. Default behavior:
-try the exact key first (`RDString.GetWithCheck`, which reports whether
-the key existed), and if it doesn't exist, fall back to
-`HitMargin.Perfect` for those three specific values only. Flag if a
-different fallback is wanted.
+**Decided:** pre-150, the game's own localization table has no
+`HitMargin.XPerfect`/`PerfectMinus`/`PerfectPlus` entries (the split
+didn't exist yet), only `HitMargin.Perfect`. `Hit.LHit`/`NHit`/`SHit`/
+`CHit` are the *only* tags affected (they're the only place a `HitMargin`
+value is turned into localized display text; `RDString.Get("HitMargin."
++ ...)` is not used anywhere else). Behavior: try the exact key first via
+`RDString.GetWithCheck` (which reports whether the key existed); only
+when the result is `PerfectMinus`, `XPerfect`, or `PerfectPlus` *and* the
+key doesn't exist, fall back to the `HitMargin.Perfect` key instead. The
+other six values (`TooEarly`/`VeryEarly`/`EarlyPerfect`/`LatePerfect`/
+`VeryLate`/`TooLate`) have matching keys on every build already and never
+hit the fallback path.
 
 ### 4. `P_scrMisc.cs` — version-gated patch selection
 
