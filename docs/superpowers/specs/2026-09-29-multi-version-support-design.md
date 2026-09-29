@@ -256,10 +256,12 @@ depending on which build produced it.
    classification (they're game override states), so this family reads
    them via `GameMargin` (§2) — `FailedFloor` resolves to nothing pre-150
    and is simply omitted, same reasoning as the `Midspin` case in §2.
-   **Naming (proposed, open to a different name during review):**
-   `AccuracyStats.TrueAccuracy`/`TrueXAccuracy` and `Scores.TrueXScore`/
-   `TrueMaxXScore`, new tags under `Tags.Attributes.Tag` like their
-   siblings.
+   **Decided naming:** `C`-prefixed, matching the existing convention for
+   Overlayer's own combined/self-computed value (`Hit.CHit`/`CTE`/...):
+   `AccuracyStats.CAccuracy`, `AccuracyStats.CXAccuracy`,
+   `Scores.CXScore`. Only the single combined value for now — no
+   per-difficulty (`L`/`N`/`S`) variants yet; revisit if/when they're
+   actually wanted.
 
 This is a real scope addition beyond "make 145/148 not crash" (a second,
 always-on accuracy system) — called out explicitly in case it should be
@@ -284,12 +286,12 @@ split into its own follow-up instead of landing in this branch.
     caught by `LazyPatchValidator` already for anything Harmony patches,
     but these are plain field/property reads, not patch targets, so this
     check is the only thing that would catch it),
-  - computes `TrueAccuracy`/`TrueXAccuracy` from a scripted sequence of
-    hits on the 150 build and asserts it matches the real
-    `AccuracyStats.XAccuracy` for that same sequence (proves the copied
-    weight table is correct), then runs the same sequence through the
-    148/145 assemblies and asserts `TrueXAccuracy` stays identical while
-    `AccuracyStats.XAccuracy` (game-native) differs by including Auto.
+  - computes `CAccuracy`/`CXAccuracy` from a scripted sequence of hits on
+    the 150 build and asserts it matches the real `AccuracyStats.
+    XAccuracy` for that same sequence (proves the copied weight table is
+    correct), then runs the same sequence through the 148/145 assemblies
+    and asserts `CXAccuracy` stays identical while `AccuracyStats.
+    XAccuracy` (game-native) differs by including Auto.
 - Manual: the user running the mod on the `older`/`general` Steam branch
   before release, since no test here substitutes for seeing real hit
   text/combo/accuracy in-game.
@@ -331,10 +333,10 @@ split into its own follow-up instead of landing in this branch.
   `OTE`..`OPL`/`MissCount`/`Overloads` (§2).
 - `Overlayer/Tags/Patches/P_scrMisc.cs` — version-gated patch pairs (§4).
 - `Overlayer/Tags/Patches/P_scrMistakeManager.cs` — compute the new
-  `TrueAccuracy`/`TrueXAccuracy`/`TrueXScore` family alongside the
-  existing (unchanged) game-native reads (§5).
+  `CAccuracy`/`CXAccuracy`/`CXScore` family alongside the existing
+  (unchanged) game-native reads (§5).
 - `Overlayer/Tags/AccuracyStats.cs`, `Overlayer/Tags/Scores.cs` — new
-  `True*` tags (§5). Existing tags in both files are unchanged.
+  `C`-prefixed tags (§5). Existing tags in both files are unchanged.
 
 No changes expected to `ComboStats.cs`, the scripting layer, or the
 updater.
