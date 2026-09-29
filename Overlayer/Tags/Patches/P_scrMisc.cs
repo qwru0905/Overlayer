@@ -67,7 +67,7 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
     }
 
     #region Hit
-    [LazyPatch("Tags.P_scrMisc.Hit__GetHitMarginInDeg", "scrMisc", "GetHitMarginInDeg", Triggers =
+    [LazyPatch("Tags.P_scrMisc.Hit__GetHitMarginInDeg", "scrMisc", "GetHitMarginInDeg", MinVersion = 150, Triggers =
     [
         nameof(Hit.LHit), nameof(Hit.LTE), nameof(Hit.LVE), nameof(Hit.LEP), nameof(Hit.LPM), nameof(Hit.LXP), nameof(Hit.LPP), nameof(Hit.LP), nameof(Hit.LLP), nameof(Hit.LVL), nameof(Hit.LTL),
         nameof(Hit.NHit), nameof(Hit.NTE), nameof(Hit.NVE), nameof(Hit.NEP), nameof(Hit.NPM), nameof(Hit.NXP), nameof(Hit.NPP), nameof(Hit.NP), nameof(Hit.NLP), nameof(Hit.NVL), nameof(Hit.NTL),
@@ -96,7 +96,7 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         }
     }
 
-    [LazyPatch("Tags.P_scrMisc.Hit__GetHitMarginInSec", "scrMisc", "GetHitMarginInSec", Triggers =
+    [LazyPatch("Tags.P_scrMisc.Hit__GetHitMarginInSec", "scrMisc", "GetHitMarginInSec", MinVersion = 150, Triggers =
     [
         nameof(Hit.LHit), nameof(Hit.LTE), nameof(Hit.LVE), nameof(Hit.LEP), nameof(Hit.LPM), nameof(Hit.LXP), nameof(Hit.LPP), nameof(Hit.LP), nameof(Hit.LLP), nameof(Hit.LVL), nameof(Hit.LTL),
         nameof(Hit.NHit), nameof(Hit.NTE), nameof(Hit.NVE), nameof(Hit.NEP), nameof(Hit.NPM), nameof(Hit.NXP), nameof(Hit.NPP), nameof(Hit.NP), nameof(Hit.NLP), nameof(Hit.NVL), nameof(Hit.NTL),
@@ -124,10 +124,39 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
             return false;
         }
     }
+
+    [LazyPatch("Tags.P_scrMisc.Hit__GetHitMargin", "scrMisc", "GetHitMargin", MaxVersion = 149, Triggers =
+    [
+        nameof(Hit.LHit), nameof(Hit.LTE), nameof(Hit.LVE), nameof(Hit.LEP), nameof(Hit.LPM), nameof(Hit.LXP), nameof(Hit.LPP), nameof(Hit.LP), nameof(Hit.LLP), nameof(Hit.LVL), nameof(Hit.LTL),
+        nameof(Hit.NHit), nameof(Hit.NTE), nameof(Hit.NVE), nameof(Hit.NEP), nameof(Hit.NPM), nameof(Hit.NXP), nameof(Hit.NPP), nameof(Hit.NP), nameof(Hit.NLP), nameof(Hit.NVL), nameof(Hit.NTL),
+        nameof(Hit.SHit), nameof(Hit.STE), nameof(Hit.SVE), nameof(Hit.SEP), nameof(Hit.SPM), nameof(Hit.SXP), nameof(Hit.SPP), nameof(Hit.SP), nameof(Hit.SLP), nameof(Hit.SVL), nameof(Hit.STL),
+        nameof(Hit.CHit), nameof(Hit.CTE), nameof(Hit.CVE), nameof(Hit.CEP), nameof(Hit.CPM), nameof(Hit.CXP), nameof(Hit.CPP), nameof(Hit.CP), nameof(Hit.CLP), nameof(Hit.CVL), nameof(Hit.CTL),
+        nameof(Hit.LT),   nameof(Hit.LV),  nameof(Hit.LELP),
+        nameof(Hit.NT),   nameof(Hit.NV),  nameof(Hit.NELP),
+        nameof(Hit.ST),   nameof(Hit.SV),  nameof(Hit.SELP),
+        nameof(Hit.CT),   nameof(Hit.CV),  nameof(Hit.CELP),
+        "LHitRaw", "NHitRaw", "SHitRaw", "CHitRaw",
+        nameof(Hit.LFast), nameof(Hit.NFast), nameof(Hit.SFast), nameof(Hit.CFast),
+        nameof(Hit.LSlow), nameof(Hit.NSlow), nameof(Hit.SSlow), nameof(Hit.CSlow)
+    ])]
+    public static class Hit__GetHitMargin {
+        public static bool Prefix(float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale, ref HitMargin __result) {
+            var controller = scrController.instance;
+            if(IsFreeroam(controller)) {
+                return true;
+            }
+            ApplyHit(controller,
+                Hit.GetHitMarginInDeg(Difficulty.Lenient, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
+                Hit.GetHitMarginInDeg(Difficulty.Normal, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
+                Hit.GetHitMarginInDeg(Difficulty.Strict, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
+                ref __result);
+            return false;
+        }
+    }
     #endregion
 
     #region ComboStats
-    [LazyPatch("Tags.P_scrMisc.ComboStats__GetHitMarginInDeg", "scrMisc", "GetHitMarginInDeg", Triggers =
+    [LazyPatch("Tags.P_scrMisc.ComboStats__GetHitMarginInDeg", "scrMisc", "GetHitMarginInDeg", MinVersion = 150, Triggers =
     [
         nameof(ComboStats.Combo), nameof(ComboStats.MaxCombo),
         nameof(ComboStats.LMarginCombo), nameof(ComboStats.NMarginCombo), nameof(ComboStats.SMarginCombo), nameof(ComboStats.MarginCombo),
@@ -150,7 +179,7 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         }
     }
 
-    [LazyPatch("Tags.P_scrMisc.ComboStats__GetHitMarginInSec", "scrMisc", "GetHitMarginInSec", Triggers =
+    [LazyPatch("Tags.P_scrMisc.ComboStats__GetHitMarginInSec", "scrMisc", "GetHitMarginInSec", MinVersion = 150, Triggers =
     [
         nameof(ComboStats.Combo), nameof(ComboStats.MaxCombo),
         nameof(ComboStats.LMarginCombo), nameof(ComboStats.NMarginCombo), nameof(ComboStats.SMarginCombo), nameof(ComboStats.MarginCombo),
@@ -172,10 +201,33 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
                 __result);
         }
     }
+
+    [LazyPatch("Tags.P_scrMisc.Combo__GetHitMargin", "scrMisc", "GetHitMargin", MaxVersion = 149, Triggers =
+    [
+        nameof(ComboStats.Combo), nameof(ComboStats.MaxCombo),
+        nameof(ComboStats.LMarginCombo), nameof(ComboStats.NMarginCombo), nameof(ComboStats.SMarginCombo), nameof(ComboStats.MarginCombo),
+        nameof(ComboStats.LMarginMaxCombo), nameof(ComboStats.NMarginMaxCombo), nameof(ComboStats.SMarginMaxCombo), nameof(ComboStats.MarginMaxCombo),
+        nameof(ComboStats.LMarginCombos), nameof(ComboStats.NMarginCombos), nameof(ComboStats.SMarginCombos), nameof(ComboStats.MarginCombos),
+        nameof(ComboStats.LMarginMaxCombos), nameof(ComboStats.NMarginMaxCombos), nameof(ComboStats.SMarginMaxCombos), nameof(ComboStats.MarginMaxCombos),
+        nameof(ComboStats.SpecialPlayMark)
+    ])]
+    public static class Combo__GetHitMargin {
+        public static void Postfix(float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale, ref HitMargin __result) {
+            var controller = scrController.instance;
+            if(IsFreeroam(controller)) {
+                return;
+            }
+            ApplyCombo(controller,
+                Hit.GetHitMarginInDeg(Difficulty.Lenient, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
+                Hit.GetHitMarginInDeg(Difficulty.Normal, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
+                Hit.GetHitMarginInDeg(Difficulty.Strict, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
+                __result);
+        }
+    }
     #endregion
 
     #region Scores
-    [LazyPatch("Tags.P_scrMisc.Scores__GetHitMarginInDeg", "scrMisc", "GetHitMarginInDeg", Triggers =
+    [LazyPatch("Tags.P_scrMisc.Scores__GetHitMarginInDeg", "scrMisc", "GetHitMarginInDeg", MinVersion = 150, Triggers =
     [
         nameof(Scores.LScore), nameof(Scores.NScore), nameof(Scores.SScore), nameof(Scores.Score)
     ])]
@@ -193,7 +245,7 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         }
     }
 
-    [LazyPatch("Tags.P_scrMisc.Scores__GetHitMarginInSec", "scrMisc", "GetHitMarginInSec", Triggers =
+    [LazyPatch("Tags.P_scrMisc.Scores__GetHitMarginInSec", "scrMisc", "GetHitMarginInSec", MinVersion = 150, Triggers =
     [
         nameof(Scores.LScore), nameof(Scores.NScore), nameof(Scores.SScore), nameof(Scores.Score)
     ])]
@@ -207,6 +259,24 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
                 Hit.GetHitMarginInSec(Difficulty.Lenient, timeDiff, floorBpm, conductorPitch, marginScale),
                 Hit.GetHitMarginInSec(Difficulty.Normal, timeDiff, floorBpm, conductorPitch, marginScale),
                 Hit.GetHitMarginInSec(Difficulty.Strict, timeDiff, floorBpm, conductorPitch, marginScale),
+                __result);
+        }
+    }
+
+    [LazyPatch("Tags.P_scrMisc.Scores__GetHitMargin", "scrMisc", "GetHitMargin", MaxVersion = 149, Triggers =
+    [
+        nameof(Scores.LScore), nameof(Scores.NScore), nameof(Scores.SScore), nameof(Scores.Score)
+    ])]
+    public static class Scores__GetHitMargin {
+        public static void Postfix(float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale, ref HitMargin __result) {
+            var controller = scrController.instance;
+            if(IsFreeroam(controller)) {
+                return;
+            }
+            ApplyScores(controller,
+                Hit.GetHitMarginInDeg(Difficulty.Lenient, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
+                Hit.GetHitMarginInDeg(Difficulty.Normal, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
+                Hit.GetHitMarginInDeg(Difficulty.Strict, hitangle, refangle, isCW, bpmTimesSpeed, conductorPitch, marginScale),
                 __result);
         }
     }
