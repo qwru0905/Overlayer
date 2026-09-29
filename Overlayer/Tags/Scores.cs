@@ -21,6 +21,9 @@ public static class Scores {
     [Tag]
     [TagDesc("Maximum possible X-Score for this level((Total Tile - Autoplay - Midspin) x 2)")]
     public static int MaxXScore;
+    [Tag]
+    [TagDesc("X-Score computed the same way on every ADOFAI version, regardless of which one is running")]
+    public static int CXScore;
 
     public static void SetScores(HitMargin l, HitMargin n, HitMargin s, HitMargin c) {
         switch(c) {
@@ -85,5 +88,5 @@ public static class Scores {
         }
     }
 
-    public static void Reset() => LScore = NScore = SScore = Score = XScore = MaxXScore = 0;
+    public static void Reset() => LScore = NScore = SScore = Score = XScore = MaxXScore = CXScore = 0;
 }

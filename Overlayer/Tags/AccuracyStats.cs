@@ -21,6 +21,12 @@ public static class AccuracyStats {
     [Tag(ProcessingFlags = ValueProcessing.RoundNumber)]
     [TagDesc("The highest achievable Absolute Max XAccuracy in the current tile(Excluding checkpoints)")]
     public static double AbsMaxXAccuracy;
+    [Tag(ProcessingFlags = ValueProcessing.RoundNumber)]
+    [TagDesc("Accuracy computed the same way on every ADOFAI version, regardless of which one is running")]
+    public static double CAccuracy;
+    [Tag(ProcessingFlags = ValueProcessing.RoundNumber)]
+    [TagDesc("XAccuracy computed the same way on every ADOFAI version (Auto/Midspin never count), regardless of which one is running")]
+    public static double CXAccuracy;
 
-    public static void Reset() => Accuracy = XAccuracy = MaxAccuracy = AbsXAccuracy = MaxXAccuracy = AbsMaxXAccuracy = double.NaN;
+    public static void Reset() => Accuracy = XAccuracy = MaxAccuracy = AbsXAccuracy = MaxXAccuracy = AbsMaxXAccuracy = CAccuracy = CXAccuracy = double.NaN;
 }
