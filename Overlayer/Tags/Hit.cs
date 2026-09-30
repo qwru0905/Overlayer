@@ -336,24 +336,54 @@ public static class Hit {
 
     public static bool ControllerIsSafe(scrController ctrl) => ctrl.currFloor?.isSafe ?? false;
 
-    // Same condition FixMargin uses to force XPerfect below. The game's own HitMarginHelper
-    // treats these two cases differently depending on what it's used for: PerfectHitMargins
-    // (combo-continuation) includes Auto/Midspin, but PlayerHitMarginWeights and
-    // HitMarginXScores (accuracy % and X-Score) have no entry for them at all - an autoplay/
-    // midspin hit earns 0 X-Score and doesn't move the accuracy percentage either way. Callers
-    // that mirror the accuracy/score side of that split (hit-margin counts, Overlayer's own
-    // Score, MarginCombo) should check this and skip, instead of counting the forced XPerfect.
+    // A level-design "Auto" tile (scrFloor.auto on the tile about to be entered) is a completely
+    // different thing from the player's Autoplay toggle (RDC.auto), but scrPlayer.OttoHoldHit()
+    // temporarily flips the GLOBAL RDC.auto to true while it processes an Auto tile, then flips it
+    // back - so RDC.auto alone can't tell "the player turned Autoplay on" apart from "the game is
+    // auto-advancing a level-design Auto tile". The tile's own .auto field (exposed here via
+    // scrController.currFloor -> nextfloor, exactly how the real game's scrPlanet.SwitchChosen
+    // reads it as `flag`) is the only reliable signal.
+    public static bool IsAutoTile(scrController ctrl) => ctrl.gameworld && (ctrl.currFloor?.nextfloor?.auto ?? false);
+
+    // Mirrors scrPlanet.SwitchChosen's own override chain on the real per-difficulty classification,
+    // confirmed against the 150 decompile, in this exact precedence (each condition below can
+    // overwrite the previous one):
+    //   1. Plain Autoplay (RDC.auto, not on an Auto tile) && !useOldAuto -> a genuine, fully-weighted
+    //      XPerfect. HitMarginHelper.PlayerHitMarginWeights/HitMarginXScores have a normal entry for
+    //      XPerfect, so this counts fully - it's why the in-game accuracy display reads 100% during
+    //      a plain Autoplay run, and callers must NOT skip it.
+    //   2. An Auto tile (see IsAutoTile) -> HitMargin.Auto, unconditionally. This wins over #1
+    //      (matches the real game: its own Auto-tile check has no !useOldAuto guard). Auto is the
+    //      one classification HitMargin the weight tables have no entry for, so it genuinely earns
+    //      zero score/accuracy weight.
+    //   3. Midspin -> HitMargin.Midspin, wins over everything above.
+    // Exposed as a pure function (no UnityEngine.Object touched) so the precedence itself is
+    // unit-testable without a live game.
+    public static HitMargin ApplyAutoOverride(HitMargin hitMargin, bool autoplayActive, bool useOldAuto, bool isAutoTile, bool midspin) {
+        if(autoplayActive && !useOldAuto) {
+            hitMargin = HitMargin.XPerfect;
+        }
+        if(isAutoTile) {
+            hitMargin = HitMargin.Auto;
+        }
+        if(midspin) {
+            hitMargin = HitMargin.Midspin;
+        }
+        return hitMargin;
+    }
+
+    // Only an Auto tile or Midspin hit is excluded from Overlayer's own counts (see
+    // ApplyAutoOverride) - a plain Autoplay-cheat hit is a genuine XPerfect and should count
+    // normally, matching the game's own accuracy display.
     public static bool IsAutoOrMidspin(scrController ctrl) =>
-        ctrl.gameworld && (ctrl.playerOne.midspinInfiniteMargin || (RDC.auto && !RDC.useOldAuto));
+        ctrl.gameworld && (ctrl.playerOne.midspinInfiniteMargin || IsAutoTile(ctrl));
 
     public static void FixMargin(scrController ctrl, ref HitMargin hitMargin) {
         if(ctrl.gameworld) {
             if(ctrl.noFailInfiniteMargin) {
                 hitMargin = HitMargin.FailMiss;
             }
-            if(ctrl.playerOne.midspinInfiniteMargin || (RDC.auto && !RDC.useOldAuto)) {
-                hitMargin = HitMargin.XPerfect;
-            }
+            hitMargin = ApplyAutoOverride(hitMargin, RDC.auto, RDC.useOldAuto, IsAutoTile(ctrl), ctrl.playerOne.midspinInfiniteMargin);
         }
     }
 
