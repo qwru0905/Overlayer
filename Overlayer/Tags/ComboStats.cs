@@ -13,6 +13,32 @@ public static class ComboStats {
     [Tag]
     [TagDesc("Maximum Combo")]
     public static int MaxCombo;
+    [Tag]
+    [TagDesc("XCombo count (only XPerfect keeps this alive)")]
+    public static int XCombo;
+    [Tag]
+    [TagDesc("Maximum XCombo")]
+    public static int MaxXCombo;
+
+    // Combo continues on the whole Perfect window (PerfectMinus/XPerfect/PerfectPlus); XCombo is
+    // the stricter dead-center-only variant. Both ignore Auto-tile/Midspin hits entirely (skip=true,
+    // from Hit.IsAutoOrMidspin) rather than treating them as a break - they're not a genuine miss,
+    // just not a genuine Perfect either, so the running combo is left exactly as it was.
+    public static void UpdateCombo(HitMargin result, bool skip) {
+        if(skip) {
+            return;
+        }
+        if(result is HitMargin.PerfectMinus or HitMargin.XPerfect or HitMargin.PerfectPlus) {
+            MaxCombo = Math.Max(MaxCombo, ++Combo);
+        } else {
+            Combo = 0;
+        }
+        if(result is HitMargin.XPerfect) {
+            MaxXCombo = Math.Max(MaxXCombo, ++XCombo);
+        } else {
+            XCombo = 0;
+        }
+    }
 
     #region MarginCombo
     [Tag]
@@ -153,7 +179,7 @@ public static class ComboStats {
     }
 
     public static void Reset() {
-        Combo = MaxCombo = 0;
+        Combo = MaxCombo = XCombo = MaxXCombo = 0;
 
         MComboCache.Clear();
         MMaxComboCache.Clear();

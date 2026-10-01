@@ -55,12 +55,10 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
             return;
         }
         // PerfectMinus/XPerfect/PerfectPlus all sit inside the old single "Perfect!" window
-        // (game r150+ split it three ways), so any of them should keep the combo alive.
-        if(result is HitMargin.PerfectMinus or HitMargin.XPerfect or HitMargin.PerfectPlus) {
-            ComboStats.MaxCombo = Math.Max(ComboStats.MaxCombo, ++ComboStats.Combo);
-        } else {
-            ComboStats.Combo = 0;
-        }
+        // (game r150+ split it three ways), so any of them should keep Combo alive; XCombo is the
+        // stricter dead-center-only variant. Auto-tile/Midspin hits are skipped entirely (see
+        // ComboStats.UpdateCombo), not treated as a break.
+        ComboStats.UpdateCombo(result, Hit.IsAutoOrMidspin(controller));
         Hit.FixMargin(controller, ref l);
         Hit.FixMargin(controller, ref n);
         Hit.FixMargin(controller, ref s);
@@ -98,7 +96,12 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         nameof(Hit.CT),   nameof(Hit.CV),  nameof(Hit.CELP),
         "LHitRaw", "NHitRaw", "SHitRaw", "CHitRaw",
         nameof(Hit.LFast), nameof(Hit.NFast), nameof(Hit.SFast), nameof(Hit.CFast),
-        nameof(Hit.LSlow), nameof(Hit.NSlow), nameof(Hit.SSlow), nameof(Hit.CSlow)
+        nameof(Hit.LSlow), nameof(Hit.NSlow), nameof(Hit.SSlow), nameof(Hit.CSlow),
+        // P_scrMistakeManager.ApplyVersionIndependentStats reads Hit.CTE/CVE/CEP/CP/CLP/CVL/CTL
+        // (populated only by this patch's ApplyHitCommon) to compute these three - without them
+        // here, a config that displays only {CAccuracy}/{CXAccuracy}/{CXScore} and no Hit.* tag
+        // never triggers this patch, so those counters stay frozen at 0 and the stats read as 0.
+        nameof(AccuracyStats.CAccuracy), nameof(AccuracyStats.CXAccuracy), nameof(Scores.CXScore)
     ])]
     public static class Hit__GetHitMarginInDeg {
         public static bool Prefix(float hitAngle, float refAngle, bool clockwise, float floorBpm, float conductorPitch, double marginScale, ref HitMargin __result) {
@@ -127,7 +130,12 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         nameof(Hit.CT),   nameof(Hit.CV),  nameof(Hit.CELP),
         "LHitRaw", "NHitRaw", "SHitRaw", "CHitRaw",
         nameof(Hit.LFast), nameof(Hit.NFast), nameof(Hit.SFast), nameof(Hit.CFast),
-        nameof(Hit.LSlow), nameof(Hit.NSlow), nameof(Hit.SSlow), nameof(Hit.CSlow)
+        nameof(Hit.LSlow), nameof(Hit.NSlow), nameof(Hit.SSlow), nameof(Hit.CSlow),
+        // P_scrMistakeManager.ApplyVersionIndependentStats reads Hit.CTE/CVE/CEP/CP/CLP/CVL/CTL
+        // (populated only by this patch's ApplyHitCommon) to compute these three - without them
+        // here, a config that displays only {CAccuracy}/{CXAccuracy}/{CXScore} and no Hit.* tag
+        // never triggers this patch, so those counters stay frozen at 0 and the stats read as 0.
+        nameof(AccuracyStats.CAccuracy), nameof(AccuracyStats.CXAccuracy), nameof(Scores.CXScore)
     ])]
     public static class Hit__GetHitMarginInSec {
         public static bool Prefix(double timeDiff, float floorBpm, float conductorPitch, double marginScale, ref HitMargin __result) {
@@ -156,7 +164,12 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         nameof(Hit.CT),   nameof(Hit.CV),  nameof(Hit.CELP),
         "LHitRaw", "NHitRaw", "SHitRaw", "CHitRaw",
         nameof(Hit.LFast), nameof(Hit.NFast), nameof(Hit.SFast), nameof(Hit.CFast),
-        nameof(Hit.LSlow), nameof(Hit.NSlow), nameof(Hit.SSlow), nameof(Hit.CSlow)
+        nameof(Hit.LSlow), nameof(Hit.NSlow), nameof(Hit.SSlow), nameof(Hit.CSlow),
+        // P_scrMistakeManager.ApplyVersionIndependentStats reads Hit.CTE/CVE/CEP/CP/CLP/CVL/CTL
+        // (populated only by this patch's ApplyHitCommon) to compute these three - without them
+        // here, a config that displays only {CAccuracy}/{CXAccuracy}/{CXScore} and no Hit.* tag
+        // never triggers this patch, so those counters stay frozen at 0 and the stats read as 0.
+        nameof(AccuracyStats.CAccuracy), nameof(AccuracyStats.CXAccuracy), nameof(Scores.CXScore)
     ])]
     public static class Hit__GetHitMargin {
         public static void Postfix(float hitangle, float refangle, bool isCW, float bpmTimesSpeed, float conductorPitch, double marginScale) {
@@ -175,7 +188,7 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
     #region ComboStats
     [LazyPatch("Tags.P_scrMisc.ComboStats__GetHitMarginInDeg", "scrMisc", "GetHitMarginInDeg", MinVersion = 150, Triggers =
     [
-        nameof(ComboStats.Combo), nameof(ComboStats.MaxCombo),
+        nameof(ComboStats.Combo), nameof(ComboStats.MaxCombo), nameof(ComboStats.XCombo), nameof(ComboStats.MaxXCombo),
         nameof(ComboStats.LMarginCombo), nameof(ComboStats.NMarginCombo), nameof(ComboStats.SMarginCombo), nameof(ComboStats.MarginCombo),
         nameof(ComboStats.LMarginMaxCombo), nameof(ComboStats.NMarginMaxCombo), nameof(ComboStats.SMarginMaxCombo), nameof(ComboStats.MarginMaxCombo),
         nameof(ComboStats.LMarginCombos), nameof(ComboStats.NMarginCombos), nameof(ComboStats.SMarginCombos), nameof(ComboStats.MarginCombos),
@@ -198,7 +211,7 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
 
     [LazyPatch("Tags.P_scrMisc.ComboStats__GetHitMarginInSec", "scrMisc", "GetHitMarginInSec", MinVersion = 150, Triggers =
     [
-        nameof(ComboStats.Combo), nameof(ComboStats.MaxCombo),
+        nameof(ComboStats.Combo), nameof(ComboStats.MaxCombo), nameof(ComboStats.XCombo), nameof(ComboStats.MaxXCombo),
         nameof(ComboStats.LMarginCombo), nameof(ComboStats.NMarginCombo), nameof(ComboStats.SMarginCombo), nameof(ComboStats.MarginCombo),
         nameof(ComboStats.LMarginMaxCombo), nameof(ComboStats.NMarginMaxCombo), nameof(ComboStats.SMarginMaxCombo), nameof(ComboStats.MarginMaxCombo),
         nameof(ComboStats.LMarginCombos), nameof(ComboStats.NMarginCombos), nameof(ComboStats.SMarginCombos), nameof(ComboStats.MarginCombos),
@@ -221,7 +234,7 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
 
     [LazyPatch("Tags.P_scrMisc.Combo__GetHitMargin", "scrMisc", "GetHitMargin", MaxVersion = 149, Triggers =
     [
-        nameof(ComboStats.Combo), nameof(ComboStats.MaxCombo),
+        nameof(ComboStats.Combo), nameof(ComboStats.MaxCombo), nameof(ComboStats.XCombo), nameof(ComboStats.MaxXCombo),
         nameof(ComboStats.LMarginCombo), nameof(ComboStats.NMarginCombo), nameof(ComboStats.SMarginCombo), nameof(ComboStats.MarginCombo),
         nameof(ComboStats.LMarginMaxCombo), nameof(ComboStats.NMarginMaxCombo), nameof(ComboStats.SMarginMaxCombo), nameof(ComboStats.MarginMaxCombo),
         nameof(ComboStats.LMarginCombos), nameof(ComboStats.NMarginCombos), nameof(ComboStats.SMarginCombos), nameof(ComboStats.MarginCombos),
