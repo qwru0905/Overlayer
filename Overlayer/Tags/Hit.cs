@@ -269,13 +269,13 @@ public static class Hit {
     [TagDesc("Official Early Perfect")]
     public static int OEP => GameCount(nameof(HitMargin.EarlyPerfect));
     [Tag]
-    [TagDesc("Official Perfect")]
-    public static int OP => OPP + OA;
+    [TagDesc("Official Perfect (OPS + Auto)")]
+    public static int OP => OPS + OA;
     [Tag]
     [TagDesc("Official Late Perfect")]
     public static int OLP => GameCount(nameof(HitMargin.LatePerfect));
     [Tag]
-    [TagDesc("Normal Very Late")]
+    [TagDesc("Official Very Late")]
     public static int OVL => GameCount(nameof(HitMargin.VeryLate));
     [Tag]
     [TagDesc("Official Too Late")]
@@ -289,15 +289,21 @@ public static class Hit {
     [Tag]
     [TagDesc("Official X Perfect (center of the perfect window)")]
     public static int OXP => GameCount(nameof(HitMargin.XPerfect));
+    // Named to match CPP's role (Current Perfect Plus, the late side of the split window) - it
+    // used to be named OPL, while the Minus+X+Plus sum below was OPP, the reverse of Current's
+    // naming (CPP is the Plus-only count, CP is the sum). Renamed for consistency; OPS below picks
+    // up the sum's old "OPP" spot now that this tag has it instead.
     [Tag]
     [TagDesc("Official Perfect Plus (late side of the perfect window)")]
-    public static int OPL => GameCount(nameof(HitMargin.PerfectPlus));
+    public static int OPP => GameCount(nameof(HitMargin.PerfectPlus));
+    // Mirrors CP's role (Minus + X + Plus, no Auto) - named OPS, not OPP, because OPP above now
+    // matches CPP's role instead of this one's.
     [Tag]
     [TagDesc("Official Perfect (Only Player, Minus + X + Plus)")]
-    // Pre-150 has no PerfectMinus/XPerfect/PerfectPlus split (OPM/OXP/OPL are all 0 there, per
+    // Pre-150 has no PerfectMinus/XPerfect/PerfectPlus split (OPM/OXP/OPP are all 0 there, per
     // GameCount's "member doesn't exist -> 0" contract) - fall back to that build's own single
     // "Perfect" slot instead of silently reporting 0 for what's actually a normal perfect count.
-    public static int OPP => GameMargin.TryGet(nameof(HitMargin.XPerfect)) != null ? OPM + OXP + OPL : GameCount("Perfect");
+    public static int OPS => GameMargin.TryGet(nameof(HitMargin.XPerfect)) != null ? OPM + OXP + OPP : GameCount("Perfect");
     [Tag]
     [TagDesc("Fast judgment in Official")]
     public static int OFast => OTE + OVE + OEP;
