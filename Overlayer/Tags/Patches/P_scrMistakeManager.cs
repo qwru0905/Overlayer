@@ -38,6 +38,27 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
 
         static int GameCount(scrMarginTracker tracker, string name) => GameMargin.TryGet(name) is HitMargin m ? tracker.GetHits(m) : 0;
 
+        // Tile.CurTile/LeftTile are updated by P_scrPlanet.Tile__SwitchChosen, a Postfix on the
+        // OUTER scrPlanet.SwitchChosen - but this patch (on scrMistakesManager.CalculateTotalAccuracy)
+        // runs from INSIDE SwitchChosen, via the AddHit() call partway through it, well before
+        // SwitchChosen reassigns controller.currentSeqID near its end (confirmed against the real
+        // r150 decompile). So leftTile here is always one hit stale: it still counts the tile that
+        // was JUST resolved - and is already reflected in perfectAll/semiPerfect - as still
+        // "remaining", inflating MaxAccuracy by one guaranteed-future-perfect that doesn't exist.
+        // Subtracting 1 corrects for that staleness; Math.Max guards the (should-be-rare) case
+        // where leftTile is already 0. The previous "- 1 only if the current tile is midspin" only
+        // happened to cancel this out when the LAST tile of a level was itself a midspin tile - any
+        // other final tile left MaxAccuracy slightly above Accuracy at the end, which should be
+        // impossible since nothing remains to improve on.
+        public static double ComputeMaxAccuracy(int perfectAll, int semiPerfect, int failedFloor, int deaths, int totalHits, int rawLeftTile) {
+            int leftTile = Math.Max(0, rawLeftTile - 1);
+            int mxsucess = leftTile + perfectAll + semiPerfect;
+            int mxtotal = totalHits + leftTile + deaths;
+            double mxratio = (mxsucess == mxtotal) ? 1.0 : ((double)mxsucess / mxtotal);
+            double mxbonus = ((leftTile + perfectAll) * 0.0001) - (failedFloor * 0.0001);
+            return 100.0 * (mxratio + mxbonus);
+        }
+
         // Split out from Postfix so a test harness can exercise it directly without a live
         // scrController/ADOBase.controller - everything it reads is either Hit's own static
         // counters (self-consistent on every build) or GameMargin-resolved state via the
@@ -135,14 +156,7 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
                 int failedFloor = tracker.GetHits(GameMargin.Existing(nameof(HitMargin.FailedFloor)));
                 int deaths = tracker.GetDeaths();
 
-                int lefttile = Tile.LeftTile - (ADOBase.lm.listFloors[Tile.CurTile].midSpin ? 1 : 0);
-
-                int mxsucess = lefttile + perfectAll + semiPerfect;
-                int mxtotal = tracker.hitMargins.Count + lefttile + deaths;
-                double mxratio = (mxsucess == mxtotal) ? 1.0 : ((double)mxsucess / mxtotal);
-                double mxbonus = ((lefttile + perfectAll) * 0.0001) - (failedFloor * 0.0001);
-
-                AccuracyStats.MaxAccuracy = 100.0 * (mxratio + mxbonus);
+                AccuracyStats.MaxAccuracy = ComputeMaxAccuracy(perfectAll, semiPerfect, failedFloor, deaths, tracker.hitMargins.Count, Tile.LeftTile);
             }
 
             ApplyVersionIndependentStats(tracker);
