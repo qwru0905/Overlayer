@@ -23,6 +23,15 @@ using Time = UnityEngine.Time;
 namespace Overlayer.Views;
 
 public class SettingsDrawer : ModelDrawable<Settings> {
+    // Main.Lang.IsLoading/IsSomeFail/IsFail are mutated by Main.Lang.Load() on a background thread
+    // (see SettingsDrawer's "Reload Language Pack" button below). Reading them directly here would
+    // let the if(IsLoading){...}else{...} branch (and the IsSomeFail/IsFail one inside it) draw a
+    // different set of GUILayout calls on the Layout pass than on the Repaint pass of the same GUI
+    // cycle if a reload happens to land in between - see GuiSnapshot's comment for why that throws.
+    private readonly GuiSnapshot<bool> isLoadingSnap = GuiSnapshots.Register(() => Main.Lang.IsLoading);
+    private readonly GuiSnapshot<bool> isSomeFailSnap = GuiSnapshots.Register(() => Main.Lang.IsSomeFail);
+    private readonly GuiSnapshot<bool> isFailSnap = GuiSnapshots.Register(() => Main.Lang.IsFail);
+
     public SettingsDrawer(Settings settings) : base(settings) { }
 
     private enum ExtraMenus {
@@ -85,6 +94,8 @@ public class SettingsDrawer : ModelDrawable<Settings> {
             GUILayout.Label($"<size=16><color=#{Effect.Rainbow(11.0)}>Square3ang</color></size>");
             GUILayout.Label($"<size=16> & </size>");
             GUILayout.Label($"<size=16><color=#{Effect.Rainbow(9.0)}>Kkitut</color></size>");
+            GUILayout.Label($"<size=16> | forked by </size>");
+            GUILayout.Label($"<size=16><color=#{Effect.Rainbow(15.0)}>qwru0905</color></size>");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             if(Main.EgEnabled) {
@@ -95,7 +106,7 @@ public class SettingsDrawer : ModelDrawable<Settings> {
             GUILayout.EndHorizontal();
         }
 
-        if(Main.Lang.IsLoading) {
+        if(isLoadingSnap.Value) {
             float elapsedTime = Time.time - preparinglastUpdateTime;
 
             if(elapsedTime >= 0.05f) {
@@ -137,9 +148,9 @@ public class SettingsDrawer : ModelDrawable<Settings> {
             }
 
             GUILayout.Label($"{Main.Lang.Get("SELECTLANGUAGE", "Select Language")} {languageDesc}");
-            if(Main.Lang.IsSomeFail) {
+            if(isSomeFailSnap.Value) {
                 GUILayout.Label("<color=#FFFF00>Some translations are failed to load, See the log for details.</color>");
-            } else if(Main.Lang.IsFail) {
+            } else if(isFailSnap.Value) {
                 GUILayout.Label($"<color=#FF0000>All translations failed to load: {Main.Lang.FailState}</color>");
             }
             GUILayout.BeginHorizontal();
@@ -158,15 +169,13 @@ public class SettingsDrawer : ModelDrawable<Settings> {
                 LanguageUpdate(selectedIndex);
             }
 
-            bool reloadLang = false;
-            // I LOVE UNITY SO MUCH WTF
-            try {
-                // F###! WHY 'System.ArgumentException'?????? WHY??????????????
-                reloadLang = Drawer.Button(Main.Lang.Get("RELOADLANG", "Reload Language Pack"), GUILayout.Width(320));
-            } catch {
-            } finally {
-                GUILayout.EndHorizontal();
-            }
+            // The ArgumentException this used to dodge with a bare try/catch came from IsLoading
+            // (read above) flipping mid-GUI-cycle on a background thread - see the GuiSnapshot
+            // fields at the top of this class. With that read going through a snapshot instead,
+            // the Layout and Repaint passes always agree on which branch they're in, so this
+            // button can't desync GUILayout's control stack anymore.
+            bool reloadLang = Drawer.Button(Main.Lang.Get("RELOADLANG", "Reload Language Pack"), GUILayout.Width(320));
+            GUILayout.EndHorizontal();
 
             if(reloadLang) {
                 _ = Task.Run(async () => {

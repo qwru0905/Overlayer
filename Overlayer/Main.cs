@@ -195,6 +195,13 @@ public static class Main {
     }
 
     public static void OnGUI(ModEntry modEntry) {
+        // Must run first, and only on Layout - see GuiSnapshot's comment. Everything that reads a
+        // value another thread can mutate and uses it to decide which/how many GUILayout calls to
+        // make should go through a GuiSnapshot registered with GuiSnapshots.Register, instead of
+        // reading that source directly.
+        if(Event.current.type == EventType.Layout) {
+            GuiSnapshots.RefreshAll();
+        }
         if(!AutoUpdater.IsLatest) {
             GUILayout.Label($"<size=50><color=red>{Lang.Get("OUTDATED_DESCRIPTION", "Outdated Version Detected!")}</color></size>");
             GUILayout.BeginHorizontal();

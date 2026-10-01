@@ -455,6 +455,7 @@
     <Compile Include="Core\EventEase.cs" />
     <Compile Include="Core\FastDateTime.cs" />
     <Compile Include="Core\FontManager.cs" />
+    <Compile Include="Core\GuiSnapshot.cs" />
     <Compile Include="Core\ImageConfigImporter.cs" />
     <Compile Include="Core\ImageManager.cs" />
     <Compile Include="Core\Patches\SafeConditionalPatch.cs" />
