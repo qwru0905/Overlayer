@@ -9,8 +9,12 @@ public class M_MonsterLove : PatchBase<M_MonsterLove> {
     [
         nameof(Tile.IsStarted), nameof(Tile.StartTile), nameof(Tile.StartProgress),
 
-        // Dependency
-        nameof(AccuracyStats.MaxXAccuracy), nameof(AccuracyStats.AbsMaxXAccuracy)
+        // Dependency - Tile.SetStartValues (below) writes StartTile/StartProgress, which
+        // ProgressStats.BestProgress_Update/_Fix and Status.FileTileAttempts also read; without
+        // these here, a config showing only one of those tags never installs this patch (matches
+        // P_scnGame.Play, which calls the same SetStartValues and lists both already).
+        nameof(AccuracyStats.MaxXAccuracy), nameof(AccuracyStats.AbsMaxXAccuracy),
+        nameof(ProgressStats.BestProgress), nameof(Status.FileTileAttempts)
     ])]
     public static class Tile__ChangeState__StateMachine__StateBehaviour__ChangeState {
         public static void Prefix(StateBehaviour __instance, Enum newState) {

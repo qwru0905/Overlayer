@@ -66,8 +66,8 @@ public class P_scrPlanet : PatchBase<P_scrPlanet> {
     [
         nameof(Tile.CurTile), nameof(Tile.LeftTile), nameof(Tile.TotalTile),
 
-        // Dependency
-        nameof(AccuracyStats.MaxAccuracy), nameof(AccuracyStats.MaxXAccuracy), nameof(AccuracyStats.AbsMaxXAccuracy)
+        // Dependency - Status.IsAutoTile reads Tile.CurTile directly
+        nameof(AccuracyStats.MaxAccuracy), nameof(AccuracyStats.MaxXAccuracy), nameof(AccuracyStats.AbsMaxXAccuracy), nameof(Status.IsAutoTile)
     ])]
     public static class Tile__SwitchChosen {
         public static void Postfix() {

@@ -12,7 +12,10 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
         nameof(AccuracyStats.XAccuracy), nameof(AccuracyStats.MaxXAccuracy),
         nameof(AccuracyStats.AbsXAccuracy), nameof(AccuracyStats.AbsMaxXAccuracy),
         nameof(Scores.XScore), nameof(Scores.MaxXScore),
-        nameof(AccuracyStats.CAccuracy), nameof(AccuracyStats.CXAccuracy), nameof(Scores.CXScore)
+        nameof(AccuracyStats.CAccuracy), nameof(AccuracyStats.CXAccuracy), nameof(Scores.CXScore),
+
+        // Dependency - InternalProfile.IT_Santokki_XAccuracy reads AccuracyStats.XAccuracy directly
+        nameof(InternalProfile.IT_Santokki_XAccuracy)
     ])]
     public static class AccuracyStats__CalculatePercentAcc {
         // Only called from Postfix when GameVersion.Current >= 150. Mono resolves a method's IL
