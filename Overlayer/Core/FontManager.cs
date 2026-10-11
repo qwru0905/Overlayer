@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.TextCore.LowLevel;
@@ -75,7 +76,7 @@ public static class FontManager {
         if(!Initialized) {
             DefaultFont = RDString.GetFontDataForLanguage(SystemLanguage.English).font;
             DefaultTMPFont = TMP_FontAsset.CreateFontAsset(DefaultFont, 100, 10, GlyphRenderMode.SDFAA, 1024, 1024);
-            FallbackFontDatas = RDString.AvailableLanguages.Select(RDString.GetFontDataForLanguage).ToList().AsReadOnly();
+            FallbackFontDatas = GetAvailableLanguages().Select(RDString.GetFontDataForLanguage).ToList().AsReadOnly();
             FallbackFonts = FallbackFontDatas.Select(f => f.font).ToList().AsReadOnly();
             FallbackTMPFonts = FallbackFontDatas.Select(f => f.fontTMP).ToList().AsReadOnly();
             DefaultTMPFont.fallbackFontAssetTable = FallbackTMPFonts.ToList();
@@ -90,6 +91,37 @@ public static class FontManager {
             Fonts = [];
             Initialized = true;
         }
+    }
+    // `RDString.AvailableLanguages` is an auto-property on the current build but a plain static
+    // field on older-2.9.8 - a direct `RDString.AvailableLanguages` call compiles to
+    // `RDString.get_AvailableLanguages()` against whatever the referenced build looks like, which
+    // throws MissingMethodException the moment this runs on a build where it's a field instead
+    // (confirmed against older-2.9.8). GetMember finds whichever kind is actually there.
+    private static SystemLanguage[] GetAvailableLanguages() {
+        var member = typeof(RDString).GetMember("AvailableLanguages", BindingFlags.Public | BindingFlags.Static).FirstOrDefault();
+        return member switch {
+            PropertyInfo p => (SystemLanguage[])p.GetValue(null),
+            FieldInfo f => (SystemLanguage[])f.GetValue(null),
+            _ => [SystemLanguage.English]
+        };
+    }
+
+    // Same shape mismatch, different package: TMP_Asset.material is an auto-property on the
+    // TextMeshPro build shipped with the current Unity version, but a plain public field on the
+    // 2022.3.62f2-era TextMeshPro bundled with older-2.9.8 (confirmed by decompiling that build's
+    // Unity.TextMeshPro.dll directly - it has `public Material material;`). A direct `.material`
+    // call compiles to `get_material()`, which throws MissingMethodException there.
+    public static Material GetMaterial(TMP_Asset asset) {
+        if(asset == null) {
+            return null;
+        }
+
+        var member = typeof(TMP_Asset).GetMember("material", BindingFlags.Public | BindingFlags.Instance).FirstOrDefault();
+        return member switch {
+            PropertyInfo p => (Material)p.GetValue(asset),
+            FieldInfo f => (Material)f.GetValue(asset),
+            _ => null
+        };
     }
     public static void Release() {
         DefaultFont = null;

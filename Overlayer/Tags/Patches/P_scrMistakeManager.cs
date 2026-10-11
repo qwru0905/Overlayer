@@ -1,6 +1,10 @@
+using HarmonyLib;
 using Overlayer.Core.Patches;
 using Overlayer.Utils;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Overlayer.Tags.Patches;
@@ -33,25 +37,36 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
             AccuracyStats.AbsMaxXAccuracy = 100.0 * tracker.maxPossibleXAcc;
             AccuracyStats.MaxXAccuracy = AccuracyStats.AbsMaxXAccuracy * checkpointMinus;
             Scores.XScore = tracker.xScore;
-            Scores.MaxXScore = tracker.maxXScore;
+            // tracker.maxXScore (the game's own property) is `base.lm.PlayerHitFloors.Count * ...`
+            // with no null check on lm - confirmed in the r150 decompile. scrMarginTracker.Reset()
+            // (called from scrController.Start(), before ADOBase.lm exists) ends by calling
+            // CalculateTotalAccuracy() itself, which runs this Postfix while lm is still null,
+            // so reading maxXScore here unconditionally throws the game's own NullReferenceException.
+            Scores.MaxXScore = ADOBase.lm != null ? tracker.maxXScore : 0;
         }
 
         static int GameCount(scrMarginTracker tracker, string name) => GameMargin.TryGet(name) is HitMargin m ? tracker.GetHits(m) : 0;
 
-        // Tile.CurTile/LeftTile are updated by P_scrPlanet.Tile__SwitchChosen, a Postfix on the
-        // OUTER scrPlanet.SwitchChosen - but this patch (on scrMistakesManager.CalculateTotalAccuracy)
-        // runs from INSIDE SwitchChosen, via the AddHit() call partway through it, well before
-        // SwitchChosen reassigns controller.currentSeqID near its end (confirmed against the real
-        // r150 decompile). So leftTile here is always one hit stale: it still counts the tile that
-        // was JUST resolved - and is already reflected in perfectAll/semiPerfect - as still
-        // "remaining", inflating MaxAccuracy by one guaranteed-future-perfect that doesn't exist.
-        // Subtracting 1 corrects for that staleness; Math.Max guards the (should-be-rare) case
-        // where leftTile is already 0. The previous "- 1 only if the current tile is midspin" only
-        // happened to cancel this out when the LAST tile of a level was itself a midspin tile - any
-        // other final tile left MaxAccuracy slightly above Accuracy at the end, which should be
-        // impossible since nothing remains to improve on.
+        // Two independent off-by-ones stack up in Tile.LeftTile by the time this runs, both
+        // confirmed against the real r150 decompile:
+        //   1. Staleness: Tile.CurTile/LeftTile are updated by P_scrPlanet.Tile__SwitchChosen, a
+        //      Postfix on the OUTER scrPlanet.SwitchChosen - but this patch (on
+        //      scrMistakesManager.CalculateTotalAccuracy) runs from INSIDE SwitchChosen, via the
+        //      AddHit() call partway through it, well before SwitchChosen reassigns
+        //      controller.currentSeqID near its end. So Tile.CurTile here is always one hit behind:
+        //      it still shows the PREVIOUS hit's tile, not the one just resolved.
+        //   2. Tile.TotalTile = ADOBase.lm.listFloors.Count counts every floor object, including
+        //      index 0 - but scrLevelMaker.PlayerHitFloors (the game's own "tiles that actually get
+        //      hit" list) explicitly filters to `seqID > 0`, since the player starts standing on
+        //      tile 0 and never "hits into" it. So Tile.CurTile's true ceiling is TotalTile - 1, not
+        //      TotalTile, meaning LeftTile = TotalTile - CurTile is always 1 higher than the real
+        //      tile count even with zero staleness.
+        // Together that's leftTile = rawLeftTile - 2 at the true end of a level. Without both
+        // corrections, MaxAccuracy credits one extra guaranteed-future-perfect that doesn't exist,
+        // inflating it by perfectAll-bonus's one unit (0.0001 -> +0.01 percentage points) right when
+        // it should drop to exactly match Accuracy. Math.Max guards leftTile never going negative.
         public static double ComputeMaxAccuracy(int perfectAll, int semiPerfect, int failedFloor, int deaths, int totalHits, int rawLeftTile) {
-            int leftTile = Math.Max(0, rawLeftTile - 1);
+            int leftTile = Math.Max(0, rawLeftTile - 2);
             int mxsucess = leftTile + perfectAll + semiPerfect;
             int mxtotal = totalHits + leftTile + deaths;
             double mxratio = (mxsucess == mxtotal) ? 1.0 : ((double)mxsucess / mxtotal);
@@ -157,6 +172,142 @@ public class P_scrMistakeManager : PatchBase<P_scrMistakeManager> {
                 int deaths = tracker.GetDeaths();
 
                 AccuracyStats.MaxAccuracy = ComputeMaxAccuracy(perfectAll, semiPerfect, failedFloor, deaths, tracker.hitMargins.Count, Tile.LeftTile);
+            }
+
+            ApplyVersionIndependentStats(tracker);
+        }
+    }
+
+    // older-2.9.8 (r136) predates the scrMarginTracker/scrPlayer split entirely: scrMistakesManager
+    // itself still carries everything AccuracyStats__CalculatePercentAcc reads off `tracker` above -
+    // percentAcc/percentXAcc (instance fields), hitMargins/hitMarginsCount (static), GetHits/
+    // GetDeaths (instance methods) - and the method being patched is still named CalculatePercentAcc
+    // (confirmed via decompile; ca3c732 renamed it to CalculateTotalAccuracy going forward, general/
+    // older (145/148) only have the new name). So __instance here plays exactly the role `tracker`
+    // plays above, just typed as scrMistakesManager instead of scrMarginTracker; the two never
+    // coexist on one build (LazyPatch.Patch() no-ops whichever target doesn't resolve), so there's
+    // no risk of double-applying these stats.
+    [LazyPatch("Tags.P_scrMistakeManager.AccuracyStats__CalculatePercentAcc.Legacy", "scrMistakesManager", "CalculatePercentAcc", Triggers =
+    [
+        nameof(AccuracyStats.Accuracy), nameof(AccuracyStats.MaxAccuracy),
+        nameof(AccuracyStats.XAccuracy), nameof(AccuracyStats.MaxXAccuracy),
+        nameof(AccuracyStats.AbsXAccuracy), nameof(AccuracyStats.AbsMaxXAccuracy),
+        nameof(Scores.XScore), nameof(Scores.MaxXScore),
+        nameof(AccuracyStats.CAccuracy), nameof(AccuracyStats.CXAccuracy), nameof(Scores.CXScore),
+        nameof(InternalProfile.IT_Santokki_XAccuracy)
+    ])]
+    public static class AccuracyStats__CalculatePercentAcc_Legacy {
+        // GetHits/GetDeaths/hitMargins no longer exist on scrMistakesManager at all on the build
+        // this project compiles against (fully moved to scrMarginTracker, not left as a compat
+        // shim) - direct calls wouldn't even compile. Resolved by name instead, which only needs
+        // them to exist on whatever's actually loaded at runtime (confirmed on 2.9.8's decompile).
+        private static MethodInfo getHitsMethod;
+        private static int GetHits(scrMistakesManager tracker, HitMargin m) {
+            getHitsMethod ??= AccessTools.Method(typeof(scrMistakesManager), "GetHits", [typeof(HitMargin)]);
+            return getHitsMethod == null ? 0 : (int)getHitsMethod.Invoke(tracker, [m]);
+        }
+        // scrMarginTracker.GetHits(HitMargin[]) sums hits across several margins in one call (see
+        // the non-Legacy Postfix above); the old scrMistakesManager.GetHits only ever took one
+        // HitMargin at a time (confirmed via decompile), so the array form is summed here instead.
+        private static int GetHits(scrMistakesManager tracker, HitMargin[] margins) {
+            int total = 0;
+            foreach(var m in margins) {
+                total += GetHits(tracker, m);
+            }
+
+            return total;
+        }
+        private static MethodInfo getDeathsMethod;
+        private static int GetDeaths(scrMistakesManager tracker) {
+            getDeathsMethod ??= AccessTools.Method(typeof(scrMistakesManager), "GetDeaths");
+            return getDeathsMethod == null ? 0 : (int)getDeathsMethod.Invoke(tracker, null);
+        }
+        private static FieldInfo hitMarginsField;
+        private static int GetHitMarginsCount() {
+            hitMarginsField ??= AccessTools.Field(typeof(scrMistakesManager), "hitMargins");
+            return hitMarginsField?.GetValue(null) is List<HitMargin> list ? list.Count : 0;
+        }
+        // percentAcc/percentXAcc ARE on scrMistakesManager on both builds (confirmed via decompile:
+        // `public float percentAcc;` on 2.9.8) - but as a plain field there and an auto-property on
+        // the build this project compiles against, so a direct `tracker.percentAcc` compiles to
+        // `get_percentAcc()`, which throws MissingMethodException on 2.9.8 (confirmed live: this was
+        // the very first exception right after reaching the main menu, before any level even
+        // loaded - everything downstream that depends on menu/level setup finishing cleanly ends up
+        // half-initialized once this throws uncaught). Same GetMember-by-kind fix as everywhere else.
+        private static MemberInfo percentAccMember;
+        private static MemberInfo percentXAccMember;
+        private static float GetPercentAcc(scrMistakesManager tracker) {
+            percentAccMember ??= typeof(scrMistakesManager).GetMember("percentAcc", BindingFlags.Public | BindingFlags.Instance).FirstOrDefault();
+            return percentAccMember switch {
+                PropertyInfo p => (float)p.GetValue(tracker),
+                FieldInfo f => (float)f.GetValue(tracker),
+                _ => 0f
+            };
+        }
+        private static float GetPercentXAcc(scrMistakesManager tracker) {
+            percentXAccMember ??= typeof(scrMistakesManager).GetMember("percentXAcc", BindingFlags.Public | BindingFlags.Instance).FirstOrDefault();
+            return percentXAccMember switch {
+                PropertyInfo p => (float)p.GetValue(tracker),
+                FieldInfo f => (float)f.GetValue(tracker),
+                _ => 0f
+            };
+        }
+
+        static int GameCount(scrMistakesManager tracker, string name) => GameMargin.TryGet(name) is HitMargin m ? GetHits(tracker, m) : 0;
+
+        public static void ApplyVersionIndependentStats(scrMistakesManager tracker) {
+            int autoCount = GameCount(tracker, nameof(HitMargin.Auto));
+            int midspinCount = GameCount(tracker, nameof(HitMargin.Midspin));
+            int multipressCount = GameCount(tracker, nameof(HitMargin.Multipress));
+            int failMissCount = GameCount(tracker, nameof(HitMargin.FailMiss));
+            int failOverloadCount = GameCount(tracker, nameof(HitMargin.FailOverload));
+            int failedFloorCount = GameCount(tracker, nameof(HitMargin.FailedFloor));
+            int deaths = GetDeaths(tracker);
+
+            int perfectFamily = Hit.CP + autoCount + midspinCount + multipressCount;
+            int semiPerfect = Hit.CEP + Hit.CLP;
+
+            int accDenominator = Hit.CTE + Hit.CVE + Hit.CEP + Hit.CP + Hit.CLP + Hit.CVL + Hit.CTL
+                + autoCount + midspinCount + multipressCount + failMissCount + failOverloadCount + failedFloorCount + deaths;
+            int accNumerator = perfectFamily + semiPerfect;
+            double accRatio = accDenominator == 0 ? 0.0 : (accNumerator == accDenominator ? 1.0 : (double)accNumerator / accDenominator);
+            double accBonus = (perfectFamily * 0.0001) - (failedFloorCount * 0.0001);
+            AccuracyStats.CAccuracy = 100.0 * (accRatio + accBonus);
+
+            double xWeighted = (Hit.CP * 1.0) + ((Hit.CEP + Hit.CLP) * 0.75) + ((Hit.CVE + Hit.CVL) * 0.4) + ((Hit.CTE + Hit.CTL) * 0.2) + (failedFloorCount * 0.2);
+            int xDenominator = Hit.CTE + Hit.CVE + Hit.CEP + Hit.CP + Hit.CLP + Hit.CVL + Hit.CTL + failedFloorCount + failMissCount + failOverloadCount;
+            double checkpointMinus = Math.Pow(0.9875, scrController.checkpointsUsed);
+            AccuracyStats.CXAccuracy = xDenominator == 0 ? 0.0 : 100.0 * (xWeighted / xDenominator) * checkpointMinus;
+
+            Scores.CXScore = (Hit.CXP * 2) + Hit.CPM + Hit.CPP;
+        }
+
+        public static void Postfix(scrMistakesManager __instance) {
+            var tracker = __instance;
+
+            double checkpointMinus = Math.Pow(0.9875, scrController.checkpointsUsed);
+
+            AccuracyStats.Accuracy = 100.0 * GetPercentAcc(tracker);
+            AccuracyStats.XAccuracy = 100.0 * GetPercentXAcc(tracker);
+            AccuracyStats.AbsXAccuracy = AccuracyStats.XAccuracy / checkpointMinus;
+
+            // Pre-150 (every build this Legacy patch can even resolve on): xScore/maxXScore/
+            // maxPossibleXAcc don't exist - mirrors the GameVersion.Current>=150 else-branch above.
+            AccuracyStats.AbsMaxXAccuracy = double.NaN;
+            AccuracyStats.MaxXAccuracy = double.NaN;
+            Scores.XScore = 0;
+            Scores.MaxXScore = 0;
+
+            if(ADOBase.lm is not null && ADOBase.lm.listFloors != null &&
+                Tile.CurTile >= 0 && Tile.CurTile < ADOBase.lm.listFloors.Count &&
+                ADOBase.lm.listFloors[Tile.CurTile] != null) {
+
+                int perfectAll = GetHits(tracker, GameMargin.Existing(nameof(HitMargin.PerfectMinus), nameof(HitMargin.XPerfect), nameof(HitMargin.PerfectPlus), "Perfect", nameof(HitMargin.Auto), nameof(HitMargin.Midspin), nameof(HitMargin.Multipress)));
+                int semiPerfect = GetHits(tracker, GameMargin.Existing(nameof(HitMargin.EarlyPerfect), nameof(HitMargin.LatePerfect)));
+                int failedFloor = GetHits(tracker, GameMargin.Existing(nameof(HitMargin.FailedFloor)));
+                int deaths = GetDeaths(tracker);
+
+                AccuracyStats.MaxAccuracy = AccuracyStats__CalculatePercentAcc.ComputeMaxAccuracy(perfectAll, semiPerfect, failedFloor, deaths, GetHitMarginsCount(), Tile.LeftTile);
             }
 
             ApplyVersionIndependentStats(tracker);

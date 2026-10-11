@@ -252,7 +252,7 @@ public class OverlayerText : OverlayerObject, IPointerDownHandler, IPointerUpHan
             return;
         }
         Text.font = targetFont;
-        Text.fontSharedMaterial = targetFont.material;
+        Text.fontSharedMaterial = FontManager.GetMaterial(targetFont);
         if(_instancedMaterials != null) {
             foreach(var m in _instancedMaterials) {
                 if(m) {

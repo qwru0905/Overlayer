@@ -744,11 +744,11 @@ public static class Impl {
         [Api("setJudgeText")]
         public static void SetJudgeText(HitMargin hitMargin, string text) {
             StaticCoroutine.Run(StaticCoroutine.SyncRunner(() => {
-                if(cachedHitTexts(ADOBase.playerManager.hitTextManager) == null) {
+                if(CachedHitTexts(ADOBase.playerManager.hitTextManager) == null) {
                     return;
                 }
 
-                foreach(var t in cachedHitTexts(ADOBase.playerManager.hitTextManager)[hitMargin]) {
+                foreach(var t in CachedHitTexts(ADOBase.playerManager.hitTextManager)[hitMargin]) {
                     t.text.text = text;
                 }
             }));
@@ -764,11 +764,11 @@ public static class Impl {
 
             FIWrapper wrapper = new(func);
             StaticCoroutine.Run(StaticCoroutine.SyncRunner(() => {
-                if(cachedHitTexts(ADOBase.playerManager.hitTextManager) == null) {
+                if(CachedHitTexts(ADOBase.playerManager.hitTextManager) == null) {
                     return;
                 }
 
-                foreach(var t in cachedHitTexts(ADOBase.playerManager.hitTextManager)[hitMargin]) {
+                foreach(var t in CachedHitTexts(ADOBase.playerManager.hitTextManager)[hitMargin]) {
                     wrapper.Call(func);
                 }
             }));
@@ -793,7 +793,18 @@ public static class Impl {
         public static void SetWeakAuto(bool enabled) => RDC.useOldAuto = enabled;
         [Api("getAngleFromFloor")]
         public static double GetAngleFromFloor(scrFloor floor) => Math.Abs(floor.entryangle - floor.exitangle) * Mathf.Rad2Deg;
-        internal static AccessTools.FieldRef<scrHitTextManager, Dictionary<HitMargin, scrHitTextMesh[]>> cachedHitTexts = AccessTools.FieldRefAccess<scrHitTextManager, Dictionary<HitMargin, scrHitTextMesh[]>>("cachedHitTexts");
+        // Untyped on purpose: a field/property declared as AccessTools.FieldRef<scrHitTextManager, ...>
+        // bakes scrHitTextManager into ITS OWN signature, so merely reflecting over this class's
+        // members (the scripting API generator scans every [Api] type) resolves that signature and
+        // throws TypeLoadException on a build where scrHitTextManager doesn't exist at all
+        // (older-2.9.8 keeps cachedHitTexts directly on scrController instead). The cast back to the
+        // real delegate type happens inside a method body below, which only gets JIT'd - and only
+        // needs scrHitTextManager to exist - when setJudgeText/configJudgeText actually run.
+        private static Delegate cachedHitTextsRef;
+        private static Dictionary<HitMargin, scrHitTextMesh[]> CachedHitTexts(object hitTextManager) {
+            cachedHitTextsRef ??= AccessTools.FieldRefAccess<scrHitTextManager, Dictionary<HitMargin, scrHitTextMesh[]>>("cachedHitTexts");
+            return ((AccessTools.FieldRef<scrHitTextManager, Dictionary<HitMargin, scrHitTextMesh[]>>)cachedHitTextsRef)((scrHitTextManager)hitTextManager);
+        }
         private static float startRadius = 1;
         internal static bool autoTextInjected = false;
         internal static bool startRadiusInjected = false;

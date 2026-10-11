@@ -1,4 +1,5 @@
 ﻿using Overlayer.Core.Patches;
+using Overlayer.Utils;
 using System;
 using System.Linq;
 
@@ -50,10 +51,10 @@ public class P_scrPlanet : PatchBase<P_scrPlanet> {
         public static void Prefix(scrPlanet __instance) {
             if(Main.IsPlaying) {
                 HitTiming.Timing =
-                    (__instance.angle - __instance.targetExitAngle)
-                    * (scrController.instance.planetarySystem.isCW ? 1.0 : -1.0)
+                    (__instance.angle - GameVersion.GetTargetExitAngle(__instance))
+                    * (GameVersion.GetIsCW(scrController.instance) ? 1.0 : -1.0)
                     * 60000.0
-                    / (Math.PI * __instance.conductor.bpm * scrController.instance.planetarySystem.speed * __instance.conductor.song.pitch);
+                    / (Math.PI * __instance.conductor.bpm * GameVersion.GetSpeed(scrController.instance) * __instance.conductor.song.pitch);
                 HitTiming.Timings.Add(HitTiming.Timing);
                 HitTiming.TimingAvg = HitTiming.Timings.Average();
             } else {

@@ -24,6 +24,18 @@ public static class TagManager {
         }
     }
     public static void Load(Type type) {
+        // GetMethods/GetFields/GetProperties resolve every member's full signature to enumerate
+        // it, even members with no [Tag] attribute - so a type with ANY member (patch Prefix/
+        // Postfix included) typed against a game class missing on the running build throws
+        // TypeLoadException here, not just for that member. One such type must not take down tag
+        // loading for every other type in the assembly, so each type gets its own try/catch.
+        try {
+            LoadMembers(type);
+        } catch(Exception e) {
+            Main.Logger.Error($"[{nameof(TagManager)}] Failed to load tags from '{type}': {e.GetType().Name} - {e.Message}");
+        }
+    }
+    private static void LoadMembers(Type type) {
         foreach(var method in type.GetMethods(BindingFlags.Public | BindingFlags.Static)) {
             var attr = method.GetCustomAttribute<TagAttribute>();
             if(attr == null) {

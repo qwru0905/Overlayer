@@ -107,6 +107,19 @@ public static class Main {
         // ...
     }
 
+    // One step throwing (a version-specific API gap, confirmed to happen repeatedly on
+    // older-2.9.8: scrPlayer/scrMarginTracker/scrHitTextManager/TMP_Asset.material all differ or
+    // are missing there) must not take every later step in OnToggle down with it - previously a
+    // single throw here propagated out to UnityModManager, which logs it as "[Exception] OnToggle"
+    // and abandons the rest of the toggle, silently skipping GUI/Scripting/ProfileManager/etc.
+    private static void TrySafe(string step, Action action) {
+        try {
+            action();
+        } catch(Exception e) {
+            Logger.Error($"[OnToggle] '{step}' failed, continuing: {e.GetType().Name} - {e.Message}");
+        }
+    }
+
     public static bool OnToggle(ModEntry modEntry, bool toggle) {
         if(toggle) {
             Settings.Load();
@@ -115,36 +128,36 @@ public static class Main {
             var settingsDrawer = new SettingsDrawer(Settings);
             Lang.OnInitialize += () => settingsDrawer.NeedLangInit = true;
             _ = Lang.Load(Path.Combine(Mod.Path, "lang"));
-            SafePatchController.ApplyAll();
-            LazyPatchManager.Load(Ass);
-            LazyPatchManager.PatchInternal();
-            Tag.InitializeWrapperAssembly();
-            OverlayerTag.Initialize();
-            TagManager.Initialize();
-            TagManager.Load(Ass);
-            FontManager.Initialize();
-            TagResetter.Postfix();
-            Tags.System.Init();
-            ImageManager.Initialize();
+            TrySafe(nameof(SafePatchController), SafePatchController.ApplyAll);
+            TrySafe("LazyPatchManager.Load", () => LazyPatchManager.Load(Ass));
+            TrySafe("LazyPatchManager.PatchInternal", LazyPatchManager.PatchInternal);
+            TrySafe("Tag.InitializeWrapperAssembly", Tag.InitializeWrapperAssembly);
+            TrySafe("OverlayerTag.Initialize", OverlayerTag.Initialize);
+            TrySafe("TagManager.Initialize", TagManager.Initialize);
+            TrySafe("TagManager.Load", () => TagManager.Load(Ass));
+            TrySafe("FontManager.Initialize", FontManager.Initialize);
+            TrySafe("TagResetter.Postfix", TagResetter.Postfix);
+            TrySafe("Tags.System.Init", Tags.System.Init);
+            TrySafe("ImageManager.Initialize", ImageManager.Initialize);
             if(!Settings.DisableLogo) {
-                LogoInit(modEntry.Path);
+                TrySafe("LogoInit", () => LogoInit(modEntry.Path));
             }
-            StaticCoroutine.Run(null);
-            StaticCoroutine.Run(LoadCoroutine(modEntry));
-            Scripting.Initalize();
+            TrySafe("StaticCoroutine.Run(null)", () => StaticCoroutine.Run(null));
+            TrySafe("StaticCoroutine.Run(LoadCoroutine)", () => StaticCoroutine.Run(LoadCoroutine(modEntry)));
+            TrySafe("Scripting.Initalize", Scripting.Initalize);
             if(Settings.FileAttempt) {
-                FileAttempt = new FileAttempt();
+                TrySafe("FileAttempt", () => FileAttempt = new FileAttempt());
             }
-            ProfileManager.Initialize();
+            TrySafe("ProfileManager.Initialize", ProfileManager.Initialize);
 
-            GUI.Init(settingsDrawer);
-            GUI.Flush();
+            TrySafe("GUI.Init", () => GUI.Init(settingsDrawer));
+            TrySafe("GUI.Flush", GUI.Flush);
 
             if(updateOnce) {
                 updateOnce = false;
 #if !DEBUG
                 // Never check for / install updates in a dev build; it would overwrite the files being developed.
-                _ = AutoUpdater.InitAndUpdate(
+                TrySafe("AutoUpdater", () => _ = AutoUpdater.InitAndUpdate(
                     Mod,
                     Settings.AutoUpdate,
                     Settings.AutoUpdateBeta,
@@ -153,7 +166,7 @@ public static class Main {
                         Logger.Error("Update Fail: " + err);
                         UpdateInfo = Lang.Get("UPDATE_FAIL", "Update Fail") + ": " + err;
                     }
-                );
+                ));
 #endif
             }
         } else {

@@ -1,4 +1,5 @@
 using Overlayer.Tags.Attributes;
+using Overlayer.Utils;
 
 namespace Overlayer.Tags;
 
@@ -55,7 +56,7 @@ public static class Bpm {
         }
         float cur = bpm;
         if(__instance.currentSeqID != 0) {
-            double speed = scrController.instance.planetarySystem.speed;
+            double speed = GameVersion.GetSpeed(scrController.instance);
             cur = (float)(bpm * speed);
         }
         TileBpm = cur;
@@ -66,7 +67,7 @@ public static class Bpm {
     public static double GetRealBpm(scrFloor floor, float bpm) {
         return floor == null
             ? (double)bpm
-            : floor.nextfloor == null ? scrController.instance.planetarySystem.speed * bpm : 60.0 / (floor.nextfloor.entryTime - floor.entryTime);
+            : floor.nextfloor == null ? GameVersion.GetSpeed(scrController.instance) * bpm : 60.0 / (floor.nextfloor.entryTime - floor.entryTime);
     }
 
     public static void Update(scrFloor floor) {
@@ -76,12 +77,12 @@ public static class Bpm {
 
         double curBPM = GetRealBpm(floor, bpm) * pitch;
 
-        TileBpm = bpm * scrController.instance.planetarySystem.speed;
+        TileBpm = bpm * GameVersion.GetSpeed(scrController.instance);
         CurBpm = curBPM;
         RecKPS = curBPM / 60;
 
         double curBPMWithoutPitch = GetRealBpm(floor, bpmwithoutpitch);
-        TileBpmWithoutPitch = bpmwithoutpitch * scrController.instance.planetarySystem.speed;
+        TileBpmWithoutPitch = bpmwithoutpitch * GameVersion.GetSpeed(scrController.instance);
         CurBpmWithoutPitch = curBPMWithoutPitch;
         RecKPSWithoutPitch = curBPMWithoutPitch / 60;
     }

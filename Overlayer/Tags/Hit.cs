@@ -1,6 +1,8 @@
-﻿using Overlayer.Tags.Attributes;
+﻿using HarmonyLib;
+using Overlayer.Tags.Attributes;
 using Overlayer.Utils;
 using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace Overlayer.Tags;
@@ -251,7 +253,18 @@ public static class Hit {
     [Tag]
     [TagDesc("Current Too Early + Current Too Late")]
     public static int CT => CTE + CTL;
-    static int[] hitMarginsCount => scrController.instance?.playerOne?.marginTracker?.hitMarginsCount;
+    // hitMarginsCount moved from a static field on scrMistakesManager to an instance field on the
+    // new per-player scrMarginTracker (ctrl.playerOne.marginTracker) in the r147 refactor. Resolved
+    // by reflection either way so this compiles and runs regardless of which the loaded assembly
+    // actually has (AccessTools.Field/FieldRefAccess bind against the real runtime type, not
+    // whatever scrMistakesManager looks like in Overlayer's own compiled-against reference).
+    private static int[] GetHitMarginsCountViaPlayer() => scrController.instance?.playerOne?.marginTracker?.hitMarginsCount;
+    private static FieldInfo hitMarginsCountStaticField;
+    private static int[] GetHitMarginsCountStatic() {
+        hitMarginsCountStaticField ??= AccessTools.Field(typeof(scrMistakesManager), "hitMarginsCount");
+        return (int[])hitMarginsCountStaticField?.GetValue(null);
+    }
+    static int[] hitMarginsCount => GameVersion.HasScrPlayer ? GetHitMarginsCountViaPlayer() : GetHitMarginsCountStatic();
 
     // GameMargin resolves "X" against whichever HitMargin type is actually loaded (see
     // GameMargin.cs), instead of (int)HitMargin.X, which is fixed to Overlayer's alpha-compiled
@@ -320,12 +333,37 @@ public static class Hit {
     [TagDesc("Official Too Early + Official Too Late")]
     public static int OT => OTE + OTL;
 
+    // GetHits moved from an instance method on scrMistakesManager (ctrl.mistakesManager) to one on
+    // the new per-player scrMarginTracker (ctrl.playerOne.marginTracker) in the r147 refactor. The
+    // old path is resolved entirely by reflection (field AND method), so it binds against whatever
+    // scrController/scrMistakesManager actually look like at runtime on an old build, regardless of
+    // what Overlayer's own compiled-against reference happens to still declare.
+    private static int GetHitsViaPlayer(HitMargin m) => scrController.instance?.playerOne?.marginTracker?.GetHits(m) ?? 0;
+    private static AccessTools.FieldRef<scrController, scrMistakesManager> mistakesManagerRef;
+    private static MethodInfo getHitsOnMistakesManager;
+    private static int GetHitsViaMistakesManager(HitMargin m) {
+        var ctrl = scrController.instance;
+        if(!ctrl) {
+            return 0;
+        }
+
+        mistakesManagerRef ??= AccessTools.FieldRefAccess<scrController, scrMistakesManager>("mistakesManager");
+        var mgr = mistakesManagerRef(ctrl);
+        if(mgr == null) {
+            return 0;
+        }
+
+        getHitsOnMistakesManager ??= AccessTools.Method(typeof(scrMistakesManager), "GetHits", [typeof(HitMargin)]);
+        return getHitsOnMistakesManager == null ? 0 : (int)getHitsOnMistakesManager.Invoke(mgr, [m]);
+    }
+    private static int GetHits(HitMargin m) => GameVersion.HasScrPlayer ? GetHitsViaPlayer(m) : GetHitsViaMistakesManager(m);
+
     [Tag]
     [TagDesc("Number of Misses")]
-    public static int MissCount => GameMargin.TryGet(nameof(HitMargin.FailMiss)) is HitMargin m ? scrController.instance?.playerOne?.marginTracker?.GetHits(m) ?? 0 : 0;
+    public static int MissCount => GameMargin.TryGet(nameof(HitMargin.FailMiss)) is HitMargin m ? GetHits(m) : 0;
     [Tag]
     [TagDesc("Number of Overloads")]
-    public static int Overloads => GameMargin.TryGet(nameof(HitMargin.FailOverload)) is HitMargin m ? scrController.instance?.playerOne?.marginTracker?.GetHits(m) ?? 0 : 0;
+    public static int Overloads => GameMargin.TryGet(nameof(HitMargin.FailOverload)) is HitMargin m ? GetHits(m) : 0;
     [Tag]
     [TagDesc("MissCount + Overloads")]
     public static int Fail => MissCount + Overloads;
@@ -382,16 +420,31 @@ public static class Hit {
     // ApplyAutoOverride) - a plain Autoplay-cheat hit is a genuine XPerfect and should count
     // normally, matching the game's own accuracy display.
     public static bool IsAutoOrMidspin(scrController ctrl) =>
-        ctrl.gameworld && (ctrl.playerOne.midspinInfiniteMargin || IsAutoTile(ctrl));
+        ctrl.gameworld && (GetMidspinInfiniteMargin(ctrl) || IsAutoTile(ctrl));
 
     public static void FixMargin(scrController ctrl, ref HitMargin hitMargin) {
         if(ctrl.gameworld) {
             if(ctrl.noFailInfiniteMargin) {
                 hitMargin = HitMargin.FailMiss;
             }
-            hitMargin = ApplyAutoOverride(hitMargin, RDC.auto, RDC.useOldAuto, IsAutoTile(ctrl), ctrl.playerOne.midspinInfiniteMargin);
+            hitMargin = ApplyAutoOverride(hitMargin, RDC.auto, RDC.useOldAuto, IsAutoTile(ctrl), GetMidspinInfiniteMargin(ctrl));
         }
     }
+
+    // midspinInfiniteMargin moved from scrController directly onto a new scrPlayer (ctrl.playerOne)
+    // in the r147 refactor. A single method that reads ctrl.playerOne.midspinInfiniteMargin behind
+    // an `if` still gets JIT'd as a whole on older-2.9.8 (the whole method body is compiled when
+    // called, not just the taken branch), throwing TypeLoadException the instant this runs there,
+    // every single hit. Splitting the two forms into separate methods means only the one actually
+    // called ever gets JIT'd, so the scrPlayer-typed body is never touched on a build without it.
+    private static bool GetMidspinInfiniteMarginViaPlayer(scrController ctrl) => ctrl.playerOne.midspinInfiniteMargin;
+    private static AccessTools.FieldRef<scrController, bool> midspinInfiniteMarginRef;
+    private static bool GetMidspinInfiniteMarginViaController(scrController ctrl) {
+        midspinInfiniteMarginRef ??= AccessTools.FieldRefAccess<scrController, bool>("midspinInfiniteMargin");
+        return midspinInfiniteMarginRef(ctrl);
+    }
+    private static bool GetMidspinInfiniteMargin(scrController ctrl) =>
+        GameVersion.HasScrPlayer ? GetMidspinInfiniteMarginViaPlayer(ctrl) : GetMidspinInfiniteMarginViaController(ctrl);
 
     public static void IncreaseCount(Difficulty diff, HitMargin hit) {
         switch(hit) {
