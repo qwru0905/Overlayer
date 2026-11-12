@@ -42,6 +42,7 @@ public static class Main {
     public static Texture2D tooltipImage = null;
 
     public static string UpdateInfo = "";
+    public static string LegacyModPath { get; private set; }
 
     private static bool updateOnce = true;
 
@@ -75,6 +76,23 @@ public static class Main {
         Mod = modEntry;
         Logger = modEntry.Logger;
         Ass = Assembly.GetExecutingAssembly();
+
+        // "Overlayer" was this mod's own Id before the 3.50.0 rename to "Overlayer-qwru"
+        // (7366e68, point updater/links at this fork). AutoUpdater only ever copies files INTO
+        // modEntry.Path, never touches a sibling folder under a different Id, so a pre-rename
+        // install under the old Id is never cleaned up by updating - and running both at once
+        // means two mods Harmony-patching the same scrController/scrPlanet/etc. methods. Guard
+        // on version too (<= the last release that still used "Overlayer") so this doesn't
+        // misfire against someone separately running the unrelated upstream modlist-org mod,
+        // which also used Id "Overlayer" but on a newer version line.
+        try {
+            var legacy = FindMod("Overlayer");
+            if(legacy != null && Version.TryParse(legacy.Info.Version, out var legacyVersion) && legacyVersion <= new Version(3, 49, 5)) {
+                LegacyModPath = legacy.Path;
+            }
+        } catch(Exception e) {
+            Logger.Error($"[LegacyModCheck] failed, continuing: {e.GetType().Name} - {e.Message}");
+        }
 
         Version needReload = AutoUpdater.UpdateBeforeLoad(modEntry);
         if(needReload != null) {
@@ -201,6 +219,12 @@ public static class Main {
         popup = new GameObject().AddComponent<UpdatePopup>();
         UnityEngine.Object.DontDestroyOnLoad(popup);
         popup.Initialize();
+
+        if(LegacyModPath != null) {
+            var legacyPopup = new GameObject().AddComponent<LegacyModPopup>();
+            UnityEngine.Object.DontDestroyOnLoad(legacyPopup);
+            legacyPopup.Initialize(LegacyModPath);
+        }
 
         //CodeEditor.CodeEditor.ignoreTextAreaNext.Clear();
 

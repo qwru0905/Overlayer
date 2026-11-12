@@ -1,3 +1,12 @@
+[ Add ]
+Multi-version support
+- Overlayer now works correctly on all 4 supported game builds (r136 "2.9.8", r145, r148, r150/alpha), instead of assuming the latest build's API shape
+{ Tag }
+XCombo / MaxXCombo
+CAccuracy / CXAccuracy / CXScore
+
 [ Fix ]
-Hit / combo / score tags (Hit, Combo, Score, ...) not working after the game replaced scrMisc.GetHitMargin with GetHitMarginInDeg / GetHitMarginInSec
-Hit judgement tags now also work with the game's async input path
+Hit / Combo / Score / Accuracy tags crashing or reporting wrong values on older game builds due to API differences between versions
+MaxAccuracy overestimating near the end of a level
+GUILayout Layout/Repaint desync causing visual glitches
+Various LazyPatch trigger gaps causing stale tag values
