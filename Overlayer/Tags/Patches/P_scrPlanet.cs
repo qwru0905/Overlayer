@@ -71,12 +71,17 @@ public class P_scrPlanet : PatchBase<P_scrPlanet> {
         nameof(AccuracyStats.MaxAccuracy), nameof(AccuracyStats.MaxXAccuracy), nameof(AccuracyStats.AbsMaxXAccuracy), nameof(Status.IsAutoTile)
     ])]
     public static class Tile__SwitchChosen {
+        // See MaxAccuracyDeferral: MaxAccuracy is only computed once CurTile below is current.
+        public static void Prefix() => MaxAccuracyDeferral.InSwitchChosen = true;
+
         public static void Postfix() {
             if(Main.IsPlaying) {
                 Tile.CurTile = scrController.instance.currentSeqID;
                 Tile.TotalTile = ADOBase.lm.listFloors.Count;
                 Tile.LeftTile = Tile.TotalTile - Tile.CurTile;
             }
+            MaxAccuracyDeferral.InSwitchChosen = false;
+            MaxAccuracyDeferral.Flush();
         }
     }
 }

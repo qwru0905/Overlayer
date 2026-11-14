@@ -42,13 +42,13 @@ public static class ADOUtils {
         overlayerErrorCanvas.btnSubmit.gameObject.SetActive(ecc.submitBtnCallback != null);
         overlayerErrorCanvas.btnIgnore.gameObject.SetActive(ecc.ignoreBtnCallback != null);
         overlayerErrorCanvas.btnBack.gameObject.SetActive(ecc.goBackBtnCallback != null);
-        overlayerErrorCanvas.txtTitle.text = ecc.titleText ?? RDString.Get("error.somethingWentWrong");
-        overlayerErrorCanvas.txtSubmit.text = ecc.submitText ?? RDString.Get("error.submit");
-        overlayerErrorCanvas.txtSupportPages.text = ecc.supportPagesText ?? RDString.Get("error.supportPages");
-        overlayerErrorCanvas.txtFaq.text = ecc.faqText ?? RDString.Get("error.faq");
-        //overlayerErrorCanvas.txtDiscord.text = ecc.discordText ?? RDString.Get("error.discord");
-        overlayerErrorCanvas.txtSteam.text = ecc.steamText ?? RDString.Get("error.steam");
-        overlayerErrorCanvas.txtGoBack.text = ecc.goBackText ?? RDString.Get("error.goBack");
+        overlayerErrorCanvas.txtTitle.text = ecc.titleText ?? GameString.Get("error.somethingWentWrong");
+        overlayerErrorCanvas.txtSubmit.text = ecc.submitText ?? GameString.Get("error.submit");
+        overlayerErrorCanvas.txtSupportPages.text = ecc.supportPagesText ?? GameString.Get("error.supportPages");
+        overlayerErrorCanvas.txtFaq.text = ecc.faqText ?? GameString.Get("error.faq");
+        //overlayerErrorCanvas.txtDiscord.text = ecc.discordText ?? GameString.Get("error.discord");
+        overlayerErrorCanvas.txtSteam.text = ecc.steamText ?? GameString.Get("error.steam");
+        overlayerErrorCanvas.txtGoBack.text = ecc.goBackText ?? GameString.Get("error.goBack");
         overlayerErrorCanvas.txtErrorMessage.text = ecc.errorMessage;
         overlayerErrorCanvas.gameObject.SetActive(true);
     }
@@ -62,11 +62,13 @@ public static class ADOUtils {
         return bits;
     }
     public static HitMargin[] UnboxMarginHash(int marginHash) {
+        // Walk the bits themselves rather than the loaded enum's values: the hash holds Overlayer's
+        // own alpha-numbered margins (see Tags.MarginName), which can sit past the end of an older
+        // build's shorter HitMargin.
         List<HitMargin> margins = [];
-        var values = EnumHelper<HitMargin>.GetValues();
-        for(int i = 0; i < values.Length; i++) {
-            if((marginHash & (1 << (int)values[i])) != 0) {
-                margins.Add(values[i]);
+        for(int i = 0; i < 31; i++) {
+            if((marginHash & (1 << i)) != 0) {
+                margins.Add((HitMargin)i);
             }
         }
         return margins.ToArray();

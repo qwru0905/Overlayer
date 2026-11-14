@@ -36,6 +36,11 @@ public static class GuiSnapshots {
         return snapshot;
     }
 
+    // Called when the mod is toggled off. Snapshots belong to views (e.g. SettingsDrawer) that are
+    // rebuilt - and re-register - on every toggle on, so without this each toggle cycle left the
+    // previous views' refreshers behind, still running every Layout event.
+    public static void Clear() => refreshers.Clear();
+
     public static void RefreshAll() {
         foreach(var refresh in refreshers) {
             refresh();

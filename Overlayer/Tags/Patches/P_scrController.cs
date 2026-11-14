@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Overlayer.Core.Patches;
+using Overlayer.Utils;
 
 namespace Overlayer.Tags.Patches;
 
@@ -24,10 +25,9 @@ public class P_scrController : PatchBase<P_scrController> {
     }
 
     // OnDamage/consecMultipressCounter live on scrPlayer from the r147 refactor onward (alpha,
-    // general r148, older r145). Two separate LazyPatches below cover both sides: only the one
-    // whose target type actually exists on the running build resolves and patches - LazyPatch.
-    // Patch() is a no-op when target is null, so having both declared is safe on every build.
-    [LazyPatch("Tags.P_scrController.Hit__OnDamage", "scrPlayer", "OnDamage", Triggers =
+    // general r148, older r145). Two separate LazyPatches below cover both sides, version-gated
+    // apart so only the one matching the running build is even resolved (and validated).
+    [LazyPatch("Tags.P_scrController.Hit__OnDamage", "scrPlayer", "OnDamage", MinVersion = GameVersion.ScrPlayerRefactor, Triggers =
     [
         nameof(Hit.Multipress)
     ])]
@@ -55,9 +55,8 @@ public class P_scrController : PatchBase<P_scrController> {
     // scrPlayer), so a direct __instance.consecMultipressCounter wouldn't even compile against it.
     // AccessTools.FieldRefAccess resolves the field by name at runtime instead, against whatever
     // scrController actually looks like on the build this is running on. general/older (r145/r148)
-    // no longer have scrController.OnDamage at all, so this target resolves to null there and
-    // LazyPatch.Patch() skips it - no double counting.
-    [LazyPatch("Tags.P_scrController.Hit__OnDamage.Legacy", "scrController", "OnDamage", Triggers =
+    // no longer have scrController.OnDamage at all - MaxVersion keeps this off those builds.
+    [LazyPatch("Tags.P_scrController.Hit__OnDamage.Legacy", "scrController", "OnDamage", MaxVersion = GameVersion.ScrPlayerRefactor - 1, Triggers =
     [
         nameof(Hit.Multipress)
     ])]

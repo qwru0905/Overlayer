@@ -36,6 +36,12 @@ public static class GameVersion {
     // midspinInfiniteMargin, OnDamage, playerOne.failBar, playerOne.marginTracker, ...).
     public static readonly bool HasScrPlayer = MiscUtils.TypeByName("scrPlayer") != null;
 
+    // releaseNumber of the oldest supported build WITH the scrPlayer split, for LazyPatch
+    // MinVersion/MaxVersion on patch pairs that target the old/new side of it. Only r136 (without)
+    // and r145 (with) are verified; the real boundary lies somewhere in between, and a build in
+    // that gap would report its unresolved target through the patch validator, as it should.
+    public const int ScrPlayerRefactor = 145;
+
     private static double GetSpeedViaPlanetarySystem(scrController ctrl) => ctrl.planetarySystem.speed;
     private static AccessTools.FieldRef<scrController, double> speedRef;
     private static double GetSpeedDirect(scrController ctrl) {

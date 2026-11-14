@@ -73,7 +73,8 @@ public static class ComboStats {
     public static string SpecialPlayMark(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) {
         var seqID = scrController.instance.currentSeqID;
         // "Perfect" hasn't been a HitMargin name since the game's r150 XPerfect split
-        // (Perfect -> PerfectMinus/XPerfect/PerfectPlus); spell out the tiers explicitly.
+        // (Perfect -> PerfectMinus/XPerfect/PerfectPlus); spell out the tiers explicitly. Parsed
+        // through MarginName, so this means Overlayer's own tiers on every game build.
         var ppCombo = MarginCombos_Internal(GCS.difficulty, "PerfectMinus|XPerfect|PerfectPlus");
         var noMiss = MarginCombos_Internal(GCS.difficulty, "VeryEarly|EarlyPerfect|PerfectMinus|XPerfect|PerfectPlus|LatePerfect|VeryLate");
         string result = "XX";
@@ -88,7 +89,7 @@ public static class ComboStats {
     }
 
     public static int MarginCombos_Internal(Difficulty diff, string margins) {
-        var hms = margins.SplitParse<HitMargin>('|');
+        var hms = MarginName.SplitParse(margins, '|');
         int hash = ADOUtils.HashMargins(hms);
         if(!MMaxComboCache.TryGetValue(hash, out _)) {
             MMaxComboCache[hash] = new int[EnumHelper<Difficulty>.GetValues().Length];
@@ -148,7 +149,7 @@ public static class ComboStats {
     public static int MarginMaxCombos(string margins) => MarginMaxCombos_Internal(GCS.difficulty, margins);
 
     public static int MarginMaxCombos_Internal(Difficulty diff, string margins) {
-        var hms = margins.SplitParse<HitMargin>('|');
+        var hms = MarginName.SplitParse(margins, '|');
         int hash = ADOUtils.HashMargins(hms);
         if(!MComboCache.TryGetValue(hash, out _)) {
             MComboCache[hash] = new int[EnumHelper<Difficulty>.GetValues().Length];
@@ -184,7 +185,9 @@ public static class ComboStats {
         MComboCache.Clear();
         MMaxComboCache.Clear();
 
-        int margins = EnumHelper<HitMargin>.GetValues().Length;
+        // Sized for Overlayer's own (alpha-numbered) classification, not the loaded enum, which
+        // is shorter pre-150 - see MarginName.
+        int margins = MarginName.SlotCount;
         for(int i = 0; i < Combos.Length; i++) {
             Combos[i] = new int[margins];
         }

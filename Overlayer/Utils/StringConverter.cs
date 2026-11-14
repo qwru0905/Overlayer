@@ -265,6 +265,10 @@ Continue:
             return TDouble;
         } else if(numType == typeof(bool)) {
             return TBool;
+        } else if(numType == typeof(HitMargin)) {
+            // Tag arguments/values of type HitMargin are Overlayer's own alpha-numbered
+            // classification - see Tags.MarginName for why the loaded enum can't convert them.
+            return THitMargin;
         } else if(typeof(Enum).IsAssignableFrom(numType)) {
             return TEnum.MakeGenericMethod(numType);
         } else {
@@ -294,6 +298,8 @@ Continue:
             return FDouble;
         } else if(numType == typeof(bool)) {
             return FBool;
+        } else if(numType == typeof(HitMargin)) {
+            return FHitMargin;
         } else if(typeof(Enum).IsAssignableFrom(numType)) {
             return FEnum.MakeGenericMethod(numType);
         } else {
@@ -302,6 +308,8 @@ Continue:
     }
     public static string FromObject(object s) => s?.ToString();
     public static string ToObject(string s) => s;
+    public static readonly MethodInfo THitMargin = typeof(Overlayer.Tags.MarginName).GetMethod(nameof(Overlayer.Tags.MarginName.Parse));
+    public static readonly MethodInfo FHitMargin = typeof(Overlayer.Tags.MarginName).GetMethod(nameof(Overlayer.Tags.MarginName.NameOf));
     public static readonly MethodInfo TInt8 = typeof(StringConverter).GetMethod("ToInt8");
     public static readonly MethodInfo TInt16 = typeof(StringConverter).GetMethod("ToInt16");
     public static readonly MethodInfo TInt32 = typeof(StringConverter).GetMethod("ToInt32");

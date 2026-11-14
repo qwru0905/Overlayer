@@ -32,7 +32,9 @@ internal class LazyPatchAttribute : Attribute {
     public bool IsCompatible => (CurrentVersion >= MinVersion || MinVersion < 0) && (MaxVersion >= CurrentVersion || MaxVersion < 0);
     public MethodBase Resolve() {
         if(!IsCompatible) {
-            Main.Logger.Error($"[{nameof(LazyPatch)}] {Id} Not Compatible - Min:{MinVersion}, Max:{MaxVersion}, Current:{CurrentVersion}");
+            // Expected, not an error: a version-gated patch (one side of an old/new API pair)
+            // skipping the builds it was never meant for.
+            Main.Logger.Log($"[{nameof(LazyPatch)}] {Id} skipped on this game version - Min:{MinVersion}, Max:{MaxVersion}, Current:{CurrentVersion}");
             return null;
         }
         var bf = ((BindingFlags)15420 | ORFlags) & ~ANDNOTFlags;

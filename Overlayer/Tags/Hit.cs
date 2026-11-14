@@ -36,31 +36,18 @@ public static class Hit {
     // "HitMargin." + margin.ToString() (the old code) asks the CLR to look up the value in the
     // RUNTIME-LOADED HitMargin type's own name table, not Overlayer's compiled intent - on 148,
     // value 4 is named "LatePerfect", so an XPerfect hit (Overlayer's own classification) would
-    // display the "LatePerfect" localization string. NameOf maps by comparing against Overlayer's
-    // OWN compiled literals (self-consistent - see the spec's "self-consistent" section), which is
-    // safe, then HitText falls back from the 3-way split's key to the pre-150 "Perfect" key when
-    // the split-specific key doesn't exist yet on this build's localization table.
-    static string NameOf(HitMargin m) => m switch {
-        HitMargin.TooEarly => nameof(HitMargin.TooEarly),
-        HitMargin.VeryEarly => nameof(HitMargin.VeryEarly),
-        HitMargin.EarlyPerfect => nameof(HitMargin.EarlyPerfect),
-        HitMargin.PerfectMinus => nameof(HitMargin.PerfectMinus),
-        HitMargin.XPerfect => nameof(HitMargin.XPerfect),
-        HitMargin.PerfectPlus => nameof(HitMargin.PerfectPlus),
-        HitMargin.LatePerfect => nameof(HitMargin.LatePerfect),
-        HitMargin.VeryLate => nameof(HitMargin.VeryLate),
-        HitMargin.TooLate => nameof(HitMargin.TooLate),
-        HitMargin.FailMiss => nameof(HitMargin.FailMiss), // FixMargin's noFailInfiniteMargin branch can set this
-        _ => m.ToString(), // shouldn't happen - Lenient/Normal/Strict/Current only ever hold one of the above - but degrade instead of throwing
-    };
-
+    // display the "LatePerfect" localization string. MarginName maps against Overlayer's OWN
+    // compiled literals instead, then HitText falls back from the 3-way split's key to the pre-150
+    // "Perfect" key when the split-specific key doesn't exist yet on this build's localization
+    // table. GameString instead of RDString directly: r136's RDString.Get/GetWithCheck have a
+    // different signature (see GameString).
     static string HitText(HitMargin margin) {
-        string text = RDString.GetWithCheck("HitMargin." + NameOf(margin), out bool exists);
+        string text = GameString.GetWithCheck("HitMargin." + MarginName.NameOf(margin), out bool exists);
         if (!exists && margin is HitMargin.PerfectMinus or HitMargin.XPerfect or HitMargin.PerfectPlus) {
             // Pre-150 localization has no PerfectMinus/XPerfect/PerfectPlus entries (that 3-way
             // split didn't exist yet), only a single "Perfect". "Perfect" isn't a member of the
             // HitMargin Overlayer compiles against (alpha), so this is a plain string, not nameof.
-            text = RDString.Get("HitMargin.Perfect");
+            text = GameString.Get("HitMargin.Perfect");
         }
         return text;
     }
@@ -302,14 +289,15 @@ public static class Hit {
     [Tag]
     [TagDesc("Official X Perfect (center of the perfect window)")]
     public static int OXP => GameCount(nameof(HitMargin.XPerfect));
-    // Named to match CPP's role (Current Perfect Plus, the late side of the split window) - it
-    // used to be named OPL, while the Minus+X+Plus sum below was OPP, the reverse of Current's
-    // naming (CPP is the Plus-only count, CP is the sum). Renamed for consistency; OPS below picks
-    // up the sum's old "OPP" spot now that this tag has it instead.
+    // Named to match CPP's role (Current Perfect Plus, the late side of the split window). 3.49.4/
+    // 3.49.5 shipped this as OPL with the Minus+X+Plus sum below as OPP - the reverse of Current's
+    // naming (CPP is the Plus-only count, CP is the sum), and not intended. Renamed for
+    // consistency in 3.50.0 (a breaking change for overlays using {OPP}/{OPL}, noted in
+    // update.txt); OPS below picks up the sum.
     [Tag]
     [TagDesc("Official Perfect Plus (late side of the perfect window)")]
     public static int OPP => GameCount(nameof(HitMargin.PerfectPlus));
-    // Mirrors CP's role (Minus + X + Plus, no Auto) - named OPS, not OPP, because OPP above now
+    // Mirrors CP's role (Minus + X + Plus, no Auto) - named OPS, not OPP, because OPP above
     // matches CPP's role instead of this one's.
     [Tag]
     [TagDesc("Official Perfect (Only Player, Minus + X + Plus)")]
@@ -371,9 +359,15 @@ public static class Hit {
     [TagDesc("Number of Multipresses")]
     public static int Multipress;
 
+    // Midspin hits in the current difficulty, counted by Overlayer itself (not a tag). Pre-150
+    // builds record a midspin in the game's own tracker as a plain HitMargin.Perfect - there is no
+    // Midspin member to read back - so CAccuracy needs this to count midspins the same way on
+    // every build. Same lifetime as the other C* counters (reset on every rewind).
+    public static int CMidspin;
+
     [Tag]
     [TagDesc("Current Difficulty")]
-    public static string Difficulty(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => RDString.Get("enum.Difficulty." + GCS.difficulty).Trim(maxLength, afterTrimStr);
+    public static string Difficulty(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => GameString.Get("enum.Difficulty." + GCS.difficulty).Trim(maxLength, afterTrimStr);
     [Tag]
     [TagDesc("Fixed difficulty return value regardless of language setting")]
     public static string DifficultyRaw(int maxLength = -1, string afterTrimStr = Extensions.DefaultTrimStr) => GCS.difficulty.ToString().Trim(maxLength, afterTrimStr);
@@ -396,10 +390,14 @@ public static class Hit {
     //      XPerfect. HitMarginHelper.PlayerHitMarginWeights/HitMarginXScores have a normal entry for
     //      XPerfect, so this counts fully - it's why the in-game accuracy display reads 100% during
     //      a plain Autoplay run, and callers must NOT skip it.
-    //   2. An Auto tile (see IsAutoTile) -> HitMargin.Auto, unconditionally. This wins over #1
-    //      (matches the real game: its own Auto-tile check has no !useOldAuto guard). Auto is the
-    //      one classification HitMargin the weight tables have no entry for, so it genuinely earns
-    //      zero score/accuracy weight.
+    //   2. An Auto tile (see IsAutoTile) -> HitMargin.Auto, unless useOldAuto. This wins over #1.
+    //      Auto is the one classification HitMargin the weight tables have no entry for, so it
+    //      genuinely earns zero score/accuracy weight. The game records Auto-tile hits as Auto
+    //      even under useOldAuto, but only AFTER deciding whether the hit counts - and on 150+
+    //      this value is handed back to the game as GetHitMarginInDeg/InSec's result, which feeds
+    //      that decision (`hitMargin.IsCounted(...)`). Auto always counts, so returning it under
+    //      useOldAuto would let an Auto-tile input of ANY timing through, where the game's own
+    //      `(auto || autoTile) && !useOldAuto` bypass deliberately doesn't.
     //   3. Midspin -> HitMargin.Midspin, wins over everything above.
     // Exposed as a pure function (no UnityEngine.Object touched) so the precedence itself is
     // unit-testable without a live game.
@@ -407,7 +405,7 @@ public static class Hit {
         if(autoplayActive && !useOldAuto) {
             hitMargin = HitMargin.XPerfect;
         }
-        if(isAutoTile) {
+        if(isAutoTile && !useOldAuto) {
             hitMargin = HitMargin.Auto;
         }
         if(midspin) {
@@ -679,6 +677,7 @@ public static class Hit {
         STE = SVE = SEP = SPM = SXP = SPP = SLP = SVL = STL = 0;
         CTE = CVE = CEP = CPM = CXP = CPP = CLP = CVL = CTL = 0;
         Multipress = 0;
+        CMidspin = 0;
     }
 
     public static HitMargin GetCHit(Difficulty diff) {

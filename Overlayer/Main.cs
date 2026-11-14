@@ -43,6 +43,9 @@ public static class Main {
 
     public static string UpdateInfo = "";
     public static string LegacyModPath { get; private set; }
+    internal static LegacyModMigration.Result LegacyModMigrationResult { get; private set; }
+    private static bool legacyPopupShown;
+    internal static bool IsUpdatePopupOpen => popup;
 
     private static bool updateOnce = true;
 
@@ -89,6 +92,9 @@ public static class Main {
             var legacy = FindMod("Overlayer");
             if(legacy != null && Version.TryParse(legacy.Info.Version, out var legacyVersion) && legacyVersion <= new Version(3, 49, 5)) {
                 LegacyModPath = legacy.Path;
+                // Before Settings is created/loaded below, so a fresh install starts from the
+                // copied settings instead of defaults.
+                LegacyModMigrationResult = LegacyModMigration.Run(legacy.Path, modEntry.Path);
             }
         } catch(Exception e) {
             Logger.Error($"[LegacyModCheck] failed, continuing: {e.GetType().Name} - {e.Message}");
@@ -207,6 +213,7 @@ public static class Main {
             LazyPatchManager.UnloadAll();
             SafePatchController.UnloadAll();
             Lang.Release();
+            GuiSnapshots.Clear();
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
             Settings.Save();
         }
@@ -220,10 +227,12 @@ public static class Main {
         UnityEngine.Object.DontDestroyOnLoad(popup);
         popup.Initialize();
 
-        if(LegacyModPath != null) {
+        // Once per session: OnShowGUI runs every time the UMM window opens.
+        if(LegacyModPath != null && !legacyPopupShown) {
+            legacyPopupShown = true;
             var legacyPopup = new GameObject().AddComponent<LegacyModPopup>();
             UnityEngine.Object.DontDestroyOnLoad(legacyPopup);
-            legacyPopup.Initialize(LegacyModPath);
+            legacyPopup.Initialize(LegacyModPath, LegacyModMigrationResult);
         }
 
         //CodeEditor.CodeEditor.ignoreTextAreaNext.Clear();

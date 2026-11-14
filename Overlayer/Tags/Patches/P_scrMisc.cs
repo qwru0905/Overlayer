@@ -23,11 +23,17 @@ public class P_scrMisc : PatchBase<P_scrMisc> {
         // it as a perfect (matching the game's own PerfectHitMargins), but it isn't a genuine
         // XPerfect-timing hit, so it shouldn't inflate the XP/etc. counts (matching the game's
         // own PlayerHitMarginWeights/HitMarginXScores, which give it no weight/score either).
-        if(!Hit.ControllerIsSafe(controller) && !Hit.IsAutoOrMidspin(controller)) {
-            Hit.IncreaseCount(Difficulty.Lenient, Hit.Lenient);
-            Hit.IncreaseCount(Difficulty.Normal, Hit.Normal);
-            Hit.IncreaseCount(Difficulty.Strict, Hit.Strict);
-            Hit.IncreaseCCount(Hit.Current);
+        if(!Hit.ControllerIsSafe(controller)) {
+            if(!Hit.IsAutoOrMidspin(controller)) {
+                Hit.IncreaseCount(Difficulty.Lenient, Hit.Lenient);
+                Hit.IncreaseCount(Difficulty.Normal, Hit.Normal);
+                Hit.IncreaseCount(Difficulty.Strict, Hit.Strict);
+                Hit.IncreaseCCount(Hit.Current);
+            } else if(Hit.Current == HitMargin.Midspin) {
+                // FixMargin's midspin override wins over the Auto-tile one, so this is exactly
+                // "a midspin hit" - see Hit.CMidspin.
+                Hit.CMidspin++;
+            }
         }
     }
 

@@ -1,12 +1,23 @@
 [ Add ]
 Multi-version support
 - Overlayer now works correctly on all 4 supported game builds (r136 "2.9.8", r145, r148, r150/alpha), instead of assuming the latest build's API shape
+Old install detection
+- If an old "Overlayer" (3.49.5 or earlier) folder is still in Mods, its settings, profiles and scripts are copied into this one, and a popup asks you to delete the old folder
 { Tag }
 XCombo / MaxXCombo
 CAccuracy / CXAccuracy / CXScore
 
+[ Change ]
+{ OPP } / { OPL } renamed to match CP / CPP (breaking - update overlays that use them)
+- OPP is now the Perfect Plus count (was OPL)
+- OPS is the Minus + X + Plus sum (was OPP)
+
 [ Fix ]
 Hit / Combo / Score / Accuracy tags crashing or reporting wrong values on older game builds due to API differences between versions
-MaxAccuracy overestimating near the end of a level
+LHit / NHit / SHit / CHit / Difficulty crashing on 2.9.8 (r136)
+MarginCombo / MarginMaxCombo / SpecialPlayMark / *HitRaw using the wrong judgment names on game builds before r150
+CAccuracy / CXAccuracy wrong after restarting from a checkpoint, and missing midspins on game builds before r150
+MaxAccuracy overestimating near the end of a level, and dropping one tile too low after a miss
+Auto tiles accepting input at any timing while the "old auto" setting is on
 GUILayout Layout/Repaint desync causing visual glitches
 Various LazyPatch trigger gaps causing stale tag values
